@@ -3,10 +3,9 @@
     including calculate is_agari
     HansuuResult class
 """
-from ext import support
-from ext.support import Yaku
-from lang import tc as lang
-
+from . import lang
+from .ext import support
+from .ext.support import Yaku
 from .pai import Pai, Furo, Tehai, TehaiComb, Param, is_agari
 
 class River:

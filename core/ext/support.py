@@ -1,4 +1,4 @@
-from ..lang import tc as lang
+from .. import lang
 
 ######################### 遊戲規則設定 ##########################
 gametype_tensuu_init_dict = { # 開局點數

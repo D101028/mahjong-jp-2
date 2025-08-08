@@ -4,10 +4,10 @@ if TYPE_CHECKING:
 
 import random
 
+from . import lang
 from .ext import support
 from .ext.index import *
 from .ext.support import Yaku
-from .lang import tc as lang
 
 class Pai:
     def __init__(self, name: str | None):
