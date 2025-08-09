@@ -256,11 +256,17 @@ class AgariComb:
     # 不考慮摸到哪張牌，拆分後的胡牌手牌 # 可為 2 5 8 11 14 張牌
     # 會將紅寶牌替換成普通牌，並記錄在 self.akadora_list 裡面
     def __init__(self, 
-                 mentsu_list: list[Mentsu] = [], 
-                 toitsu_list: list[Toitsu] = [], 
-                 tanhai_list: list[Pai] = [], 
+                 mentsu_list: list[Mentsu] | None = None, 
+                 toitsu_list: list[Toitsu] | None = None, 
+                 tanhai_list: list[Pai] | None = None, 
                  hoora_type: str | None = None, 
                  akadora_list: list[Pai] | None = None): 
+        if mentsu_list is None:
+            mentsu_list = []
+        if toitsu_list is None:
+            toitsu_list = []
+        if tanhai_list is None:
+            tanhai_list = []
         self.mentsu_list = mentsu_list
         self.toitsu_list = toitsu_list # len = 1 if not being chiitoitsu and koyaku
         self.tanhai_list = tanhai_list # only for kokushi if not including koyaku
@@ -306,12 +312,25 @@ class TehaiComb:
     def __init__(self, 
                  tenpai_type: str, 
                  tenpai: Pai, 
-                 waiting_comb: list[Pai] = [], 
-                 toitsu_list: list[Toitsu] = [], 
-                 mentsu_list: list[Mentsu] = [], 
-                 furo_list: list[Furo] = [], 
-                 tanhai_list: list[Pai] = [], 
-                 akadora_revise_list: list[Pai] = []):
+                 waiting_comb: list[Pai] | None = None, 
+                 toitsu_list: list[Toitsu] | None = None, 
+                 mentsu_list: list[Mentsu] | None = None, 
+                 furo_list: list[Furo] | None = None, 
+                 tanhai_list: list[Pai] | None = None, 
+                 akadora_revise_list: list[Pai] | None = None):
+        if waiting_comb is None:
+            waiting_comb = []
+        if toitsu_list is None:
+            toitsu_list = []
+        if mentsu_list is None:
+            mentsu_list = []
+        if furo_list is None:
+            furo_list = []
+        if tanhai_list is None:
+            tanhai_list = []
+        if akadora_revise_list is None:
+            akadora_revise_list = []
+
         self.tenpai_type = tenpai_type # such as lang.ryanmenmachi
         self.tenpai = tenpai
 
@@ -752,7 +771,7 @@ class Param:
                  chanfon: str, 
                  is_rinshanpai_agari: bool, 
                  dora_pointers: list[Pai], 
-                 uradora_pointers: list[Pai] = []):
+                 uradora_pointers: list[Pai] | None = None):
         self.is_riichi = is_riichi
         self.riichi_junme = riichi_junme
         self.agari_junme = agari_junme
@@ -765,7 +784,7 @@ class Param:
         self.chanfon = chanfon
         self.is_rinshanpai_agari = is_rinshanpai_agari
         self.dora_pointers = dora_pointers
-        self.uradora_pointers = uradora_pointers
+        self.uradora_pointers = uradora_pointers if uradora_pointers is not None else []
 
 class Han:
     def __init__(self, name: Yaku | str, is_menchin: bool, dora_hansuu: int | None = None):
@@ -941,7 +960,7 @@ def get_fusuu(yaku_list: list[Yaku], tehai_comb: TehaiComb, param: Param, is_men
         else:
             fu += 16
 
-    return (fu//10 + (fu % 10 != 0)) * 10 # 無條件進位
+    return round_up(fu, 1)
     
 def round_up(n: int, ndigits: int) -> int:
     mod = 10**ndigits
