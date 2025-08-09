@@ -120,8 +120,9 @@ chinroutoupai_list = [Pai(p) for p in support.chinroutoupai_paitype_tuple]
 sanyuanpai_list = [Pai(p) for p in support.sanyuanpai_paitype_tuple]
 suushiipai_list = [Pai(p) for p in support.suushiipai_paitype_tuple]
 
-def create_pai_list(name_list: list[str]):
-    if not isinstance(name_list, list | str):
+def create_pai_list(name_list: list[str] | str):
+    if (not isinstance(name_list, list) and not isinstance(name_list, str)) or \
+        (isinstance(name_list, list) and not all(isinstance(_, str) for _ in name_list)):
         raise TypeError(f"name_list should be a str list or a str, not '{type(name_list).__name__}'")
     pai_list = []
     if isinstance(name_list, str):
@@ -136,41 +137,41 @@ def create_pai_list(name_list: list[str]):
         pai_list = [Pai(i) for i in name_list]
     return pai_list
 
-class Yama:
-    def __init__(self, gametype: str):
-        self.gametype = gametype 
+# class Yama:
+#     def __init__(self, gametype: str):
+#         self.gametype = gametype 
 
-        self.pai_list: list[Pai]
-        self.dora_pointers: list[Pai] = []
-        self.uradora_pointers: list[Pai] = []
+#         self.pai_list: list[Pai]
+#         self.dora_pointers: list[Pai] = []
+#         self.uradora_pointers: list[Pai] = []
 
-        if gametype == lang.yonin_ton_ikkyoku:
-            pai_list_temp = PAI_INDEX_WITH_AKADORA.copy()
-            random.shuffle(pai_list_temp)
-            self.pai_list = create_pai_list(pai_list_temp)
+#         if gametype == lang.yonin_ton_ikkyoku:
+#             pai_list_temp = PAI_INDEX_WITH_AKADORA.copy()
+#             random.shuffle(pai_list_temp)
+#             self.pai_list = create_pai_list(pai_list_temp)
 
-    def deal(self, players: list['Player']):
-        for player in players:
-            # deal pais
-            player.tehai = Tehai(self.pai_list[0:13])
-            player.tehai.sort()
-            del self.pai_list[0:13]
-        # open dora pointer
-        self.dora_pointers.append(self.pai_list[0])
-        del self.pai_list[0]
-        self.uradora_pointers.append(self.pai_list[0])
-        del self.pai_list[0]
+#     def deal(self, players: list['Player']):
+#         for player in players:
+#             # deal pais
+#             player.tehai = Tehai(self.pai_list[0:13])
+#             player.tehai.sort()
+#             del self.pai_list[0:13]
+#         # open dora pointer
+#         self.dora_pointers.append(self.pai_list[0])
+#         del self.pai_list[0]
+#         self.uradora_pointers.append(self.pai_list[0])
+#         del self.pai_list[0]
     
-    def draw(self, player) -> Pai:
-        pai = self.pai_list[0]
-        player.tsumo_pai = pai
-        player.player_junme += 1
-        del self.pai_list[0]
-        return pai
+#     def draw(self, player: 'Player') -> Pai:
+#         pai = self.pai_list[0]
+#         player.tsumo_pai = pai
+#         player.player_junme += 1
+#         del self.pai_list[0]
+#         return pai
     
-    def get_available_pai_num(self):
-        if self.gametype == lang.yonin_ton_ikkyoku:
-            return len(self.pai_list) + len(self.dora_pointers) + len(self.uradora_pointers) - 14 # wanpai cannot be drawn
+#     def get_available_pai_num(self):
+#         if self.gametype == lang.yonin_ton_ikkyoku:
+#             return len(self.pai_list) + len(self.dora_pointers) + len(self.uradora_pointers) - 14 # wanpai cannot be drawn
 
 class Mentsu:
     def __init__(self, type: str, pai_list: list[Pai]):
@@ -787,6 +788,7 @@ class Param:
         self.uradora_pointers = uradora_pointers if uradora_pointers is not None else []
 
 class Han:
+    """將計入最終飜數的飜種 (含役、寶牌)"""
     def __init__(self, name: Yaku | str, is_menchin: bool, dora_hansuu: int | None = None):
         self.name: str
         self.hansuu: int
@@ -801,9 +803,11 @@ class Han:
                 raise ValueError('`dora_hansuu` could not be None when name is of type str')
             self.name = name
             self.hansuu = dora_hansuu
+        else:
+            raise ValueError(f"name type error: {type(name).__name__}")
     
     def __str__(self):
-        return f"{self.name}：{self.hansuu}飜"
+        return f"<Han {self.name}：{self.hansuu}飜>"
 
 class AgariResult:
     def __init__(self, 

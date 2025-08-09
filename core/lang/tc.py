@@ -1,13 +1,9 @@
-# -*- coding: utf-8 -*-
-#python 3.7.2 3.7.3
-# title="麻將詞彙"
-
-yonin_ton_ikkyoku = "四人東一局"
-yonin_ton = "四人東"
-yonin_nan = "四人南"
-sannin_ton_ikkyoku = "三人東一局"
-sannin_ton = "三人東"
-sannin_nan = "三人南"
+# yonin_ton_ikkyoku = "四人東一局"
+# yonin_ton = "四人東"
+# yonin_nan = "四人南"
+# sannin_ton_ikkyoku = "三人東一局"
+# sannin_ton = "三人東"
+# sannin_nan = "三人南"
 
 # round_ton_ikkyoku = "東一局"
 # round_ton_nikyoku = "東二局"

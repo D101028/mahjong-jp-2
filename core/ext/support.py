@@ -1,23 +1,23 @@
 from .. import lang
 
 ######################### 遊戲規則設定 ##########################
-gametype_tensuu_init_dict = { # 開局點數
-    lang.yonin_ton: 25000,
-    lang.yonin_ton_ikkyoku: 25000,
-    lang.yonin_nan: 25000,
-    lang.sannin_ton: 35000,
-    lang.sannin_ton_ikkyoku: 35000,
-    lang.sannin_nan: 35000
-}
+# gametype_tensuu_init_dict = { # 開局點數
+#     lang.yonin_ton: 25000,
+#     lang.yonin_ton_ikkyoku: 25000,
+#     lang.yonin_nan: 25000,
+#     lang.sannin_ton: 35000,
+#     lang.sannin_ton_ikkyoku: 35000,
+#     lang.sannin_nan: 35000
+# }
 
-gametype_tensuu_over_dict = { # 最低結束點數
-    lang.yonin_ton: 30000,
-    lang.yonin_ton_ikkyoku: 30000,
-    lang.yonin_nan: 30000,
-    lang.sannin_ton: 40000,
-    lang.sannin_ton_ikkyoku: 40000,
-    lang.sannin_nan: 40000
-}
+# gametype_tensuu_over_dict = { # 最低結束點數
+#     lang.yonin_ton: 30000,
+#     lang.yonin_ton_ikkyoku: 30000,
+#     lang.yonin_nan: 30000,
+#     lang.sannin_ton: 40000,
+#     lang.sannin_ton_ikkyoku: 40000,
+#     lang.sannin_nan: 40000
+# }
 
 is_tobitsuzuku = False # 是否擊飛繼續
 
@@ -82,19 +82,19 @@ fonwei_lang_chanfon_yaku_dict = {
     lang.pei: lang.yakuhai_pei_chanfon, 
 }
 
-lang_tsufon_yaku_fonwei_dict = {
-    lang.yakuhai_ton: lang.ton, 
-    lang.yakuhai_nan: lang.nan, 
-    lang.yakuhai_shaa: lang.shaa, 
-    lang.yakuhai_pei: lang.pei, 
-}
+# lang_tsufon_yaku_fonwei_dict = {
+#     lang.yakuhai_ton: lang.ton, 
+#     lang.yakuhai_nan: lang.nan, 
+#     lang.yakuhai_shaa: lang.shaa, 
+#     lang.yakuhai_pei: lang.pei, 
+# }
 
-lang_chanfon_yaku_fonwei_dict = {
-    lang.yakuhai_ton_chanfon: lang.ton, 
-    lang.yakuhai_nan_chanfon: lang.nan, 
-    lang.yakuhai_shaa_chanfon: lang.shaa, 
-    lang.yakuhai_pei_chanfon: lang.pei, 
-}
+# lang_chanfon_yaku_fonwei_dict = {
+#     lang.yakuhai_ton_chanfon: lang.ton, 
+#     lang.yakuhai_nan_chanfon: lang.nan, 
+#     lang.yakuhai_shaa_chanfon: lang.shaa, 
+#     lang.yakuhai_pei_chanfon: lang.pei, 
+# }
 
 # lang_action_lang_option_dict = {
 #     lang.action_tsumo: lang.option_tsumo, 
@@ -118,18 +118,18 @@ suushiipai_paitype_tuple = ("1z", "2z", "3z", "4z")
 ################################################################
 
 ######################### 基本遊戲設定 ##########################
-gametype_player_num_dict = {
-    lang.yonin_ton: 4,
-    lang.yonin_ton_ikkyoku: 4,
-    lang.yonin_nan: 4,
-    lang.sannin_ton: 3,
-    lang.sannin_ton_ikkyoku: 3,
-    lang.sannin_nan: 3
-}
+# gametype_player_num_dict = {
+#     lang.yonin_ton: 4,
+#     lang.yonin_ton_ikkyoku: 4,
+#     lang.yonin_nan: 4,
+#     lang.sannin_ton: 3,
+#     lang.sannin_ton_ikkyoku: 3,
+#     lang.sannin_nan: 3
+# }
 
-chanfon_pos_dict = {
-    lang.ton:0, lang.nan:1, lang.shaa:2, lang.pei:3
-}
+# chanfon_pos_dict = {
+#     lang.ton:0, lang.nan:1, lang.shaa:2, lang.pei:3
+# }
 
 ################################################################
 
