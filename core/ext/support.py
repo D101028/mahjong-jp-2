@@ -96,15 +96,15 @@ lang_chanfon_yaku_fonwei_dict = {
     lang.yakuhai_pei_chanfon: lang.pei, 
 }
 
-lang_action_lang_option_dict = {
-    lang.action_tsumo: lang.option_tsumo, 
-    lang.action_ron: lang.option_ron, 
-    lang.action_chii: lang.option_chii, 
-    lang.action_pon: lang.option_pon, 
-    lang.action_minkan : lang.option_minkan, 
-    lang.action_kakan : lang.option_kakan, 
-    lang.action_ankan : lang.option_ankan
-}
+# lang_action_lang_option_dict = {
+#     lang.action_tsumo: lang.option_tsumo, 
+#     lang.action_ron: lang.option_ron, 
+#     lang.action_chii: lang.option_chii, 
+#     lang.action_pon: lang.option_pon, 
+#     lang.action_minkan : lang.option_minkan, 
+#     lang.action_kakan : lang.option_kakan, 
+#     lang.action_ankan : lang.option_ankan
+# }
 ################################################################
 
 ######################### 特殊牌組字形 ##########################
