@@ -59,7 +59,7 @@ class Pai:
         else:
             return support.paitype_sign_number_dict[self.type]*10 + int(self.name[0])
 
-    def next(self, is_allow_mod = False):
+    def next(self, allow_mod = False):
         if not isinstance(self.number, int):
             raise TypeError(f"cannot get next with self.type: {type(self.number).__name__}")
         if not isinstance(self.type, str):
@@ -69,15 +69,15 @@ class Pai:
         if self.type is None:
             return Pai(None)
         if self.type == support.lang_paitype_dict[lang.zuu]:
-            if self.number >= 7 and not is_allow_mod:
+            if self.number >= 7 and not allow_mod:
                 return Pai(None) 
             return Pai(str((self.number + 1) % 7) + self.type)
         else:
-            if self.number >= 9 and not is_allow_mod:
+            if self.number >= 9 and not allow_mod:
                 return Pai(None) 
             return Pai(str((self.number + 1) % 10) + self.type)
     
-    def previous(self, is_allow_mod = False):
+    def previous(self, allow_mod = False):
         if not isinstance(self.number, int):
             raise TypeError(f"cannot get previous with self.type: {type(self.number).__name__}")
         if not isinstance(self.type, str):
@@ -87,11 +87,11 @@ class Pai:
         if self.type is None:
             return Pai(None)
         if self.type == support.lang_paitype_dict[lang.zuu]:
-            if self.number <= 1 and not is_allow_mod:
+            if self.number <= 1 and not allow_mod:
                 return Pai(None)
             return Pai(str((self.number - 1) % 7) + self.type)
         else:
-            if self.number <= 1 and not is_allow_mod:
+            if self.number <= 1 and not allow_mod:
                 return Pai(None)
             return Pai(str((self.number - 1) % 10) + self.type)
 
@@ -149,7 +149,7 @@ class Yama:
             random.shuffle(pai_list_temp)
             self.pai_list = create_pai_list(pai_list_temp)
 
-    def deal(self, players: list[Player]):
+    def deal(self, players: list['Player']):
         for player in players:
             # deal pais
             player.tehai = Tehai(self.pai_list[0:13])

@@ -1,1 +1,1 @@
-from tc import *
+from .tc import *
