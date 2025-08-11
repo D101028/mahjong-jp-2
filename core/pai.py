@@ -5,9 +5,9 @@ if TYPE_CHECKING:
 import random
 
 from . import lang
-from .ext import support
+from .ext import support, yaku
 from .ext.index import *
-from .ext.support import Yaku
+from .ext.yaku import Yaku, lang_yaku_dict
 
 class Pai:
     def __init__(self, name: str | None):
@@ -17,6 +17,14 @@ class Pai:
             # null type
             self.name, self.number, self.type, self.is_akadora, self.usual_name = None, None, None, None, None
         else:
+            if len(name) != 2 or \
+                not name[0].isdigit() or \
+                name[1] not in (value for _, value in support.lang_paitype_dict):
+                raise ValueError(f"Invalid value for Pai parameter name: {self.name}")
+            if name[1] == support.lang_paitype_dict[lang.zuu]:
+                if int(name) > 7 or int(name) == 0:
+                    raise ValueError(f"Invalid value for Pai parameter name: {self.name}")
+
             self.name = name
             self.number = int(name[0]) if name[0] != "0" else 5
             self.type = name[1]
@@ -25,7 +33,7 @@ class Pai:
     
     def __eq__(self, other):
         if not isinstance(other, Pai | str):
-            return False
+            raise ValueError(f"Undefined operator __eq__ for Pai and {type(other).__name__}")
         if isinstance(other, str):
             other = Pai(other)
         if other.type is None or self.type is None:
@@ -35,9 +43,9 @@ class Pai:
     def __str__(self):
         return f"<Pai {self.name}>"
 
-    def equal(self, other, is_strict:bool = True):
+    def equal(self, other, is_strict: bool = True):
         if not isinstance(other, Pai | str):
-            raise TypeError(f"other must be a Pai, not {type(other).__name__}")
+            raise TypeError(f"other must be a Pai or str, not {type(other).__name__}")
         if isinstance(other, str):
             other = Pai(other)
         if self.type is None or other.type is None:
@@ -136,42 +144,6 @@ def create_pai_list(name_list: list[str] | str):
     else:
         pai_list = [Pai(i) for i in name_list]
     return pai_list
-
-# class Yama:
-#     def __init__(self, gametype: str):
-#         self.gametype = gametype 
-
-#         self.pai_list: list[Pai]
-#         self.dora_pointers: list[Pai] = []
-#         self.uradora_pointers: list[Pai] = []
-
-#         if gametype == lang.yonin_ton_ikkyoku:
-#             pai_list_temp = PAI_INDEX_WITH_AKADORA.copy()
-#             random.shuffle(pai_list_temp)
-#             self.pai_list = create_pai_list(pai_list_temp)
-
-#     def deal(self, players: list['Player']):
-#         for player in players:
-#             # deal pais
-#             player.tehai = Tehai(self.pai_list[0:13])
-#             player.tehai.sort()
-#             del self.pai_list[0:13]
-#         # open dora pointer
-#         self.dora_pointers.append(self.pai_list[0])
-#         del self.pai_list[0]
-#         self.uradora_pointers.append(self.pai_list[0])
-#         del self.pai_list[0]
-    
-#     def draw(self, player: 'Player') -> Pai:
-#         pai = self.pai_list[0]
-#         player.tsumo_pai = pai
-#         player.player_junme += 1
-#         del self.pai_list[0]
-#         return pai
-    
-#     def get_available_pai_num(self):
-#         if self.gametype == lang.yonin_ton_ikkyoku:
-#             return len(self.pai_list) + len(self.dora_pointers) + len(self.uradora_pointers) - 14 # wanpai cannot be drawn
 
 class Mentsu:
     def __init__(self, type: str, pai_list: list[Pai]):
@@ -765,7 +737,6 @@ class Param:
                  agari_junme: int, 
                  is_tsumo: bool, 
                  is_ron: bool, 
-                #  is_ippatsu_deny: bool, 
                  is_chyankan: bool, 
                  available_pai_num: int, 
                  menfon: str, 
@@ -778,7 +749,6 @@ class Param:
         self.agari_junme = agari_junme
         self.is_tsumo = is_tsumo
         self.is_ron = is_ron
-        # self.is_ippatsu_deny = is_ippatsu_deny
         self.is_chyankan = is_chyankan
         self.available_pai_num = available_pai_num
         self.menfon = menfon
@@ -898,7 +868,7 @@ def get_fusuu(yaku_list: list[Yaku], tehai_comb: TehaiComb, param: Param, is_men
         pass 
     if tehai_comb.tenpai_type in (lang.kokushimusoutanmenmachi, lang.kokushimusoujuusanmenmachi): # 國士
         return 30
-    elif support.lang_yaku_dict[lang.pinfu] in yaku_list: # 平和
+    elif lang_yaku_dict[lang.pinfu] in yaku_list: # 平和
         if param.is_tsumo:
             return 20
         else:
@@ -1041,31 +1011,31 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
         if param.riichi_junme is None:
             raise ValueError("param.riichi_junme could not be None if param.is_riichi is True")
         if param.riichi_junme == 1:
-            result.append(support.lang_yaku_dict[lang.dabururiichi].copy())
+            result.append(lang_yaku_dict[lang.dabururiichi].copy())
         else:
-            result.append(support.lang_yaku_dict[lang.riichi].copy())
+            result.append(lang_yaku_dict[lang.riichi].copy())
         if param.is_tsumo and param.agari_junme == param.riichi_junme + 1: # 一發自摸
-            result.append(support.lang_yaku_dict[lang.ippatsu].copy())
+            result.append(lang_yaku_dict[lang.ippatsu].copy())
         elif param.is_ron and param.agari_junme == param.riichi_junme: # 一發榮和
-            result.append(support.lang_yaku_dict[lang.ippatsu].copy())
+            result.append(lang_yaku_dict[lang.ippatsu].copy())
 
     # 搶槓
     if param.is_chyankan:
-        result.append(support.lang_yaku_dict[lang.chyankan].copy())
+        result.append(lang_yaku_dict[lang.chyankan].copy())
 
     # 海底撈月、河底撈魚
     if param.available_pai_num == 0:
         if param.is_tsumo:
-            result.append(support.lang_yaku_dict[lang.haiteiraoyue].copy())
+            result.append(lang_yaku_dict[lang.haiteiraoyue].copy())
         elif param.is_ron:
-            result.append(support.lang_yaku_dict[lang.houteiraoyui].copy())
+            result.append(lang_yaku_dict[lang.houteiraoyui].copy())
     
     # 斷么九
     if all((not p in yaochuu_list) for p in all_pai):
         if not support.is_kuitan and not is_menchin:
             pass 
         else:
-            result.append(support.lang_yaku_dict[lang.tanyaochuu].copy())
+            result.append(lang_yaku_dict[lang.tanyaochuu].copy())
         
     # 役牌
     for mentsu in koutsu_list:
@@ -1073,23 +1043,23 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
             pai_name = mentsu.pai_list[0].name
             # 三元牌
             if pai_name == support.lang_yakuhai_painame_dict[lang.yakuhai_haku]:
-                result.append(support.lang_yaku_dict[lang.yakuhai_haku].copy())
+                result.append(lang_yaku_dict[lang.yakuhai_haku].copy())
             elif pai_name == support.lang_yakuhai_painame_dict[lang.yakuhai_hatsu]:
-                result.append(support.lang_yaku_dict[lang.yakuhai_hatsu].copy())
+                result.append(lang_yaku_dict[lang.yakuhai_hatsu].copy())
             elif pai_name == support.lang_yakuhai_painame_dict[lang.yakuhai_chun]:
-                result.append(support.lang_yaku_dict[lang.yakuhai_chun].copy())
+                result.append(lang_yaku_dict[lang.yakuhai_chun].copy())
             # 自風牌
             if support.lang_yakuhai_painame_dict[support.fonwei_lang_tsufon_yaku_dict[param.menfon]] == pai_name:
-                result.append(support.lang_yaku_dict[support.fonwei_lang_tsufon_yaku_dict[param.menfon]].copy())
+                result.append(lang_yaku_dict[support.fonwei_lang_tsufon_yaku_dict[param.menfon]].copy())
             # 場風牌
             if support.lang_yakuhai_painame_dict[support.fonwei_lang_chanfon_yaku_dict[param.chanfon]] == pai_name:
-                result.append(support.lang_yaku_dict[support.fonwei_lang_chanfon_yaku_dict[param.chanfon]].copy())
+                result.append(lang_yaku_dict[support.fonwei_lang_chanfon_yaku_dict[param.chanfon]].copy())
 
     # 門清役
     if is_menchin: # 門清
         # 自摸
         if param.is_tsumo:
-            result.append(support.lang_yaku_dict[lang.tsumo].copy())
+            result.append(lang_yaku_dict[lang.tsumo].copy())
 
         # 平和
         yakuhai_list = [Pai(p) for p in (support.lang_yakuhai_painame_dict[support.fonwei_lang_tsufon_yaku_dict[param.menfon]], 
@@ -1102,29 +1072,29 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
             toitsu_list[0].pai_list[0] not in yakuhai_list, # 無役牌對子
             len(shuntsu_list) == 4 # 四個順子
         )):
-            result.append(support.lang_yaku_dict[lang.pinfu].copy())
+            result.append(lang_yaku_dict[lang.pinfu].copy())
 
         # 一盃口、二盃口
         if len(shuntsu_list) >= 2:
             shuntsu_set = [x for i, x in enumerate(shuntsu_list) if x not in shuntsu_list[:i]]
             peekoosuu = sum([shuntsu_list.count(m) == 2 for m in shuntsu_set])
             if peekoosuu >= 1:
-                result.append(support.lang_yaku_dict[lang.iipeekoo].copy())
+                result.append(lang_yaku_dict[lang.iipeekoo].copy())
             if peekoosuu >= 2:
-                result.append(support.lang_yaku_dict[lang.ryanpeekoo].copy())
+                result.append(lang_yaku_dict[lang.ryanpeekoo].copy())
 
         # 四暗刻
         if len(koutsu_list) == 4:
             if tehai_comb.tenpai_type == lang.soohoomachi and param.is_tsumo:
-                result.append(support.lang_yaku_dict[lang.suuankoo].copy())
+                result.append(lang_yaku_dict[lang.suuankoo].copy())
             elif tehai_comb.tenpai_type == lang.tankimachi:
-                result.append(support.lang_yaku_dict[lang.suuankootanki].copy())
+                result.append(lang_yaku_dict[lang.suuankootanki].copy())
  
         # 國士、國士十三
         if tehai_comb.tenpai_type == lang.kokushimusoutanmenmachi:
-            result.append(support.lang_yaku_dict[lang.kokushimusou].copy())
+            result.append(lang_yaku_dict[lang.kokushimusou].copy())
         elif tehai_comb.tenpai_type == lang.kokushimusoujuusanmenmachi:
-            result.append(support.lang_yaku_dict[lang.kokushimusoujuusanmen].copy())
+            result.append(lang_yaku_dict[lang.kokushimusoujuusanmen].copy())
 
         # 九蓮寶燈
         if len(tehai_comb.furo_list) == 0:
@@ -1139,17 +1109,17 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
                         break
                 else:
                     if tehai_int_list[0] == tehai_comb.tenpai.number: # 純正
-                        result.append(support.lang_yaku_dict[lang.junseichuurenpouton].copy())
+                        result.append(lang_yaku_dict[lang.junseichuurenpouton].copy())
                     else:
-                        result.append(support.lang_yaku_dict[lang.chuurenpouton].copy())
+                        result.append(lang_yaku_dict[lang.chuurenpouton].copy())
 
     # 嶺上開花
     if param.is_tsumo and param.is_rinshanpai_agari:
-        result.append(support.lang_yaku_dict[lang.rinshankaihou].copy())
+        result.append(lang_yaku_dict[lang.rinshankaihou].copy())
 
     # 七對子
     if tehai_comb.tenpai_type == lang.chiitoitsutanmenmachi:
-        result.append(support.lang_yaku_dict[lang.chiitoitsu].copy())
+        result.append(lang_yaku_dict[lang.chiitoitsu].copy())
 
     # 三色同順
     if len(shuntsu_list) >= 3:
@@ -1165,7 +1135,7 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
                 temp_dict[number_string] = [pai_type]
         for key, value in temp_dict.items():
             if len(value) == 3:
-                result.append(support.lang_yaku_dict[lang.sanshokudoujun].copy())
+                result.append(lang_yaku_dict[lang.sanshokudoujun].copy())
                 break
 
     # 一氣通貫
@@ -1182,20 +1152,20 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
             temp_dict[type_].append("".join(sorted([str(p.number) for p in m.pai_list])))
         for key, value in temp_dict.items():
             if all("123" in value, "456" in value, "789" in value): # type: ignore
-                result.append(support.lang_yaku_dict[lang.ikkitsuukan].copy())
+                result.append(lang_yaku_dict[lang.ikkitsuukan].copy())
                 break
 
     # 混全、純全
     if all(t.pai_list[0] in yaochuu_list for t in toitsu_list):
         if all(any(p in yaochuu_list for p in m.pai_list) for m in mentsu_furo_list):
             if all(t.pai_list[0] in chinroutoupai_list for t in toitsu_list) and all(any(p in chinroutoupai_list for p in m.pai_list) for m in mentsu_furo_list):
-                result.append(support.lang_yaku_dict[lang.junchantaiyaochuu].copy())
+                result.append(lang_yaku_dict[lang.junchantaiyaochuu].copy())
             else:
-                result.append(support.lang_yaku_dict[lang.honchantaiyaochuu].copy())
+                result.append(lang_yaku_dict[lang.honchantaiyaochuu].copy())
 
     # 對對和
     if len(koutsu_list) == 4:
-        result.append(support.lang_yaku_dict[lang.toitoihoo].copy())
+        result.append(lang_yaku_dict[lang.toitoihoo].copy())
 
     # 三暗刻
     if len(koutsu_list) >= 3:
@@ -1209,14 +1179,14 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
         if param.is_tsumo and tehai_comb.tenpai_type == lang.soohoomachi: # 自摸雙碰多一暗刻
             ankou_ankan_count += 1
         if ankou_ankan_count >= 3:
-            result.append(support.lang_yaku_dict[lang.sanankoo].copy())
+            result.append(lang_yaku_dict[lang.sanankoo].copy())
 
     # 混老頭、清老頭
     if all(p in yaochuu_list for p in all_pai):
         if all(p in chinroutoupai_list for p in all_pai):
-            result.append(support.lang_yaku_dict[lang.chinroutou].copy())
+            result.append(lang_yaku_dict[lang.chinroutou].copy())
         elif all(p.type != support.lang_paitype_dict[lang.zuu] for p in all_pai):
-            result.append(support.lang_yaku_dict[lang.honroutou].copy())
+            result.append(lang_yaku_dict[lang.honroutou].copy())
 
     # 三色同刻
     if len(koutsu_list) >= 3:
@@ -1233,17 +1203,17 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
                 temp_dict[n] = [pai_type]
         for key, value in temp_dict.items():
             if len(value) == 3:
-                result.append(support.lang_yaku_dict[lang.sanshokudookoo].copy())
+                result.append(lang_yaku_dict[lang.sanshokudookoo].copy())
                 break
 
     # 三槓子、四槓子
     if len(tehai_comb.furo_list) >= 3:
         kantsu_number = sum([f.type in (lang.minkan, lang.ankan, lang.kakan) for f in tehai_comb.furo_list])
         if kantsu_number == 4:
-            result.append(support.lang_yaku_dict[lang.sankantsu].copy())
-            result.append(support.lang_yaku_dict[lang.suukantsu].copy())
+            result.append(lang_yaku_dict[lang.sankantsu].copy())
+            result.append(lang_yaku_dict[lang.suukantsu].copy())
         elif kantsu_number == 3:
-            result.append(support.lang_yaku_dict[lang.sankantsu].copy())
+            result.append(lang_yaku_dict[lang.sankantsu].copy())
 
     # 小三元
     if toitsu_list[0].pai_list[0] in sanyuanpai_list:
@@ -1254,27 +1224,27 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
             if pai in list_copy:
                 list_copy.remove(pai)
         if len(list_copy) == 0:
-            result.append(support.lang_yaku_dict[lang.shousangen].copy())
+            result.append(lang_yaku_dict[lang.shousangen].copy())
 
     # 混一色、清一色、字一色
     type_set = {p.type for p in all_pai}
     if len(type_set) <= 2:
         if support.lang_paitype_dict[lang.zuu] in type_set:
             if len(type_set) == 1: # 字一色
-                result.append(support.lang_yaku_dict[lang.tsuuiisoo].copy())
+                result.append(lang_yaku_dict[lang.tsuuiisoo].copy())
             else: # 混一色
-                result.append(support.lang_yaku_dict[lang.honiisoo].copy())
+                result.append(lang_yaku_dict[lang.honiisoo].copy())
         elif len(type_set) == 1: # 清一色
-            result.append(support.lang_yaku_dict[lang.chiniisoo].copy())
+            result.append(lang_yaku_dict[lang.chiniisoo].copy())
     
     # 天地和
     if param.is_tsumo and param.agari_junme == 1:
         # 天和
         if param.menfon == support.fonwei_tuple[0]:
-            result.append(support.lang_yaku_dict[lang.tenhou].copy())
+            result.append(lang_yaku_dict[lang.tenhou].copy())
         # 地和
         else:
-            result.append(support.lang_yaku_dict[lang.chiihou].copy())
+            result.append(lang_yaku_dict[lang.chiihou].copy())
 
     # 大三元
     if len(koutsu_list) >= 3:
@@ -1283,7 +1253,7 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
             if m.pai_list[0] in sanyuanpai_list_copy:
                 sanyuanpai_list_copy.remove(m.pai_list[0])
         if len(sanyuanpai_list_copy) == 0:
-            result.append(support.lang_yaku_dict[lang.daisangen].copy())
+            result.append(lang_yaku_dict[lang.daisangen].copy())
 
     # 小四喜
     if len(koutsu_list) >= 3 and toitsu_list[0].pai_list[0] in suushiipai_list:
@@ -1293,11 +1263,11 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
             if m.pai_list[0] in suushiipai_list_copy:
                 suushiipai_list_copy.remove(m.pai_list[0])
         if len(suushiipai_list_copy) == 0:
-            result.append(support.lang_yaku_dict[lang.shousuushii].copy())
+            result.append(lang_yaku_dict[lang.shousuushii].copy())
 
     # 綠一色
     if all(p in ryuuiisoopai_list for p in all_pai):
-        result.append(support.lang_yaku_dict[lang.ryuuiisoo].copy())
+        result.append(lang_yaku_dict[lang.ryuuiisoo].copy())
 
     # 大四喜
     if len(koutsu_list) >= 4:
@@ -1306,7 +1276,7 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
             if m.pai_list[0] in suushiipai_list_copy:
                 suushiipai_list_copy.remove(m.pai_list[0])
         if len(suushiipai_list_copy) == 0:
-            result.append(support.lang_yaku_dict[lang.daisuushii].copy())
+            result.append(lang_yaku_dict[lang.daisuushii].copy())
 
     # 古役
     if support.is_koyaku:
@@ -1314,21 +1284,21 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
 
     # 處理複合役
     koumokukoukan_dict: dict[str, tuple[Yaku, ...]] = {}
-    koumokukoukan_dict.update(support.koumokukoukan_lang_dict)
+    koumokukoukan_dict.update(yaku.koumokukoukan_lang_dict)
     if support.is_koyaku:
-        koumokukoukan_dict.update(support.koumokukoukan_koyaku_lang_dict)
+        koumokukoukan_dict.update(yaku.koumokukoukan_koyaku_lang_dict)
     if support.is_aotenjyou: # 青天井
         # 加入古役用複合役
-        koumokukoukan_dict.update(support.oatenjyou_koumokukoukan_lang_dict)
+        koumokukoukan_dict.update(yaku.oatenjyou_koumokukoukan_lang_dict)
         if support.is_koyaku:
-            koumokukoukan_dict.update(support.oatenjyou_koumokukoukan_koyaku_lang_dict)
+            koumokukoukan_dict.update(yaku.oatenjyou_koumokukoukan_koyaku_lang_dict)
     else:
         # 若有役滿，則刪除役滿以外
         if any(y.is_yakuman for y in result):
             for y0 in result.copy():
                 result.remove(y0) if not y0.is_yakuman else None
     for key, value in koumokukoukan_dict.items():
-        if support.lang_yaku_dict[key] in result:
+        if lang_yaku_dict[key] in result:
             for y in value:
                 result.remove(y) if y in result else None
 

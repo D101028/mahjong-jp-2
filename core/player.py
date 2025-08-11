@@ -4,9 +4,7 @@
     HansuuResult class
 """
 from . import lang
-from .ext import support
-from .ext.support import Yaku
-from .pai import Pai, Furo, Tehai, TehaiComb, Param, is_agari
+from .pai import Pai, Tehai, is_agari
 
 class River:
     def __init__(self) -> None:
