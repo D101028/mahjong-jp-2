@@ -19,21 +19,21 @@ from .. import lang
 #     lang.sannin_nan: 40000
 # }
 
-is_tobitsuzuku = False # 是否擊飛繼續
+# is_tobitsuzuku = False # 是否擊飛繼續
 
-is_last_oya_infinitely_renchan = False
+# is_last_oya_infinitely_renchan = False
 
-shibarisuu = 1 # 飜縛
+# shibarisuu = 1 # 飜縛
 
-is_koyaku = False # 是否包含古役
+# is_koyaku = False # 是否包含古役
 
-is_aotenjyou = False # 是否使用青天井規則
+# is_aotenjyou = False # 是否使用青天井規則
 
-is_kuitan = True # 是否有食斷
+# is_kuitan = True # 是否有食斷
 
-pinfu_ron_fusuu = 30 # 平和榮和符數
+# pinfu_ron_fusuu = 30 # 平和榮和符數
 
-rienfontoitsu_fusuu = 2 # 連風對子符數
+# rienfontoitsu_fusuu = 2 # 連風對子符數
 
 ################################################################
 
