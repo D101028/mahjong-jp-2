@@ -1,4 +1,4 @@
-from .. import lang
+from .. import tokens
 
 ######################### 遊戲規則設定 ##########################
 # gametype_tensuu_init_dict = { # 開局點數
@@ -37,13 +37,32 @@ from .. import lang
 
 ################################################################
 
+#################### 驗證語言字形合法性 #########################
+
+if len({tokens.man, tokens.suo, tokens.pin, tokens.zuu}) != 4 or \
+    len({tokens.ton, tokens.nan, tokens.shaa, tokens.pei}) != 4 or \
+    len({tokens.yakuhai_ton,
+        tokens.yakuhai_nan,
+        tokens.yakuhai_shaa,
+        tokens.yakuhai_pei,
+        tokens.yakuhai_ton_chanfon,
+        tokens.yakuhai_nan_chanfon,
+        tokens.yakuhai_shaa_chanfon,
+        tokens.yakuhai_pei_chanfon,
+        tokens.yakuhai_haku,
+        tokens.yakuhai_hatsu,
+        tokens.yakuhai_chun}) != 11:
+    raise ValueError("language error")
+
+################################################################
+
 ######################### 基本字形定義 #########################
 ##### key 不得重複 #####
-lang_paitype_dict = { # 不得重複 # 不得為數字
-    lang.man: "m",
-    lang.suo: "s",
-    lang.pin: "p", 
-    lang.zuu: "z"
+token_paitype_dict = { # 不得重複 # 不得為數字
+    tokens.man: "m",
+    tokens.suo: "s",
+    tokens.pin: "p", 
+    tokens.zuu: "z"
 }
 
 paitype_sign_number_dict = {
@@ -51,35 +70,35 @@ paitype_sign_number_dict = {
 }
 
 fonwei_tuple = ( # 不得重複
-    lang.ton, lang.nan, lang.shaa, lang.pei
+    tokens.ton, tokens.nan, tokens.shaa, tokens.pei
 )
 
-lang_yakuhai_painame_dict = {
-    lang.yakuhai_ton: "1z", 
-    lang.yakuhai_nan: "2z", 
-    lang.yakuhai_shaa: "3z", 
-    lang.yakuhai_pei: "4z", 
-    lang.yakuhai_ton_chanfon: "1z", 
-    lang.yakuhai_nan_chanfon: "2z", 
-    lang.yakuhai_shaa_chanfon: "3z", 
-    lang.yakuhai_pei_chanfon: "4z", 
-    lang.yakuhai_haku: "5z", 
-    lang.yakuhai_hatsu: "6z", 
-    lang.yakuhai_chun: "7z"
+token_yakuhai_painame_dict = {
+    tokens.yakuhai_ton: "1z", 
+    tokens.yakuhai_nan: "2z", 
+    tokens.yakuhai_shaa: "3z", 
+    tokens.yakuhai_pei: "4z", 
+    tokens.yakuhai_ton_chanfon: "1z", 
+    tokens.yakuhai_nan_chanfon: "2z", 
+    tokens.yakuhai_shaa_chanfon: "3z", 
+    tokens.yakuhai_pei_chanfon: "4z", 
+    tokens.yakuhai_haku: "5z", 
+    tokens.yakuhai_hatsu: "6z", 
+    tokens.yakuhai_chun: "7z"
 }
 
-fonwei_lang_tsufon_yaku_dict = {
-    lang.ton: lang.yakuhai_ton, 
-    lang.nan: lang.yakuhai_nan, 
-    lang.shaa: lang.yakuhai_shaa, 
-    lang.pei: lang.yakuhai_pei, 
+fonwei_token_tsufon_yaku_dict = {
+    tokens.ton: tokens.yakuhai_ton, 
+    tokens.nan: tokens.yakuhai_nan, 
+    tokens.shaa: tokens.yakuhai_shaa, 
+    tokens.pei: tokens.yakuhai_pei, 
 }
 
-fonwei_lang_chanfon_yaku_dict = {
-    lang.ton: lang.yakuhai_ton_chanfon, 
-    lang.nan: lang.yakuhai_nan_chanfon, 
-    lang.shaa: lang.yakuhai_shaa_chanfon, 
-    lang.pei: lang.yakuhai_pei_chanfon, 
+fonwei_token_chanfon_yaku_dict = {
+    tokens.ton: tokens.yakuhai_ton_chanfon, 
+    tokens.nan: tokens.yakuhai_nan_chanfon, 
+    tokens.shaa: tokens.yakuhai_shaa_chanfon, 
+    tokens.pei: tokens.yakuhai_pei_chanfon, 
 }
 
 ######################### 特殊牌組字形 ##########################

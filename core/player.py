@@ -3,7 +3,7 @@
     including calculate is_agari
     HansuuResult class
 """
-from . import lang
+from . import tokens
 from .pai import Pai, Tehai, is_agari
 
 class River:
@@ -37,21 +37,21 @@ class Player:
             return self.ID == other.ID
 
     def is_menchin(self):
-        return all([furo.type == lang.ankan for furo in self.tehai.furo_list])
+        return all([furo.type == tokens.ankan for furo in self.tehai.furo_list])
 
     def is_agari(self):
         # 檢查胡牌型
+        all_pai: list[Pai] = []
         if self.tsumo_pai is None:
             if self.ron_temp_pai is None:
                 return False
-            all_pai = [self.ron_temp_pai]
+            all_pai.append(self.ron_temp_pai)
         else:
-            all_pai = [self.tsumo_pai]
+            all_pai.append(self.tsumo_pai)
         furo_pai: list[Pai] = []
         for furo in self.tehai.furo_list:
             furo_pai += furo.to_agari_cal()
         all_pai += self.tehai.pai_list + furo_pai
-        all_pai.sort(key = lambda p: p.usual_name) # type: ignore
 
         return is_agari(all_pai)
 
@@ -60,6 +60,4 @@ class Player:
         if not tenpai_list:
             return False
         full_list = self.doujin_furiten_pais + self.riichi_furiten_pais + self.datsu_furiten_pais
-        if any(p in full_list for p in tenpai_list):
-            return True
-        return False
+        return any(p in full_list for p in tenpai_list)
