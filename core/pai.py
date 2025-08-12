@@ -616,6 +616,7 @@ class Tehai:
         pai_list = [Pai(p) if isinstance(p, str) else p.copy() for p in pai_list]
         self.pai_list = pai_list  # len = 1 4 7 10 13
         self.furo_list: list[FuroType] = []
+        self.penuki_list: list[Pai] = []
     
     def __str__(self) -> str:
         output = ""
@@ -958,7 +959,12 @@ def get_agari_result_list(tehai: Tehai, agari_pai: Pai, param: Param) -> list[Ag
             # dora
             dora_suu = 0
             for dora_pointer in param.dora_pointers:
-                dora_suu += all_pai.count(dora_pointer.next(True))
+                dora = dora_pointer.next(True)
+                dora_suu += all_pai.count(dora)
+                dora_suu += tehai.penuki_list.count(dora) # penuki
+            # (penuki dora)
+            if len(tehai.penuki_list) != 0:
+                dora_suu += len(tehai.penuki_list)
             if dora_suu != 0:
                 hansum += dora_suu
                 han_list.append(Han(tokens.dora, is_menchin, dora_suu))
@@ -966,7 +972,9 @@ def get_agari_result_list(tehai: Tehai, agari_pai: Pai, param: Param) -> list[Ag
             if param.is_riichi:
                 uradora_suu = 0
                 for uradora_pointer in param.uradora_pointers:
-                    uradora_suu += all_pai.count(uradora_pointer.next(True))
+                    uradora = uradora_pointer.next(True)
+                    uradora_suu += all_pai.count(uradora)
+                    uradora_suu += tehai.penuki_list.count(uradora) # penuki
                 if uradora_suu > 0:
                     hansum += uradora_suu
                     han_list.append(Han(tokens.uradora, is_menchin, uradora_suu))
