@@ -41,19 +41,16 @@ class Player:
 
     def is_agari(self):
         # 檢查胡牌型
-        all_pai: list[Pai] = []
+        pai_list: list[Pai] = []
         if self.tsumo_pai is None:
             if self.ron_temp_pai is None:
                 return False
-            all_pai.append(self.ron_temp_pai)
+            pai_list.append(self.ron_temp_pai)
         else:
-            all_pai.append(self.tsumo_pai)
-        furo_pai: list[Pai] = []
-        for furo in self.tehai.furo_list:
-            furo_pai += furo.to_agari_cal()
-        all_pai += self.tehai.pai_list + furo_pai
+            pai_list.append(self.tsumo_pai)
+        pai_list += self.tehai.pai_list
 
-        return is_agari(all_pai)
+        return is_agari(pai_list)
 
     def is_furiten(self):
         tenpai_list = self.tehai.get_tenpais()

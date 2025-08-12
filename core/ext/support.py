@@ -1,64 +1,7 @@
 from . import tokens
 
-######################### 遊戲規則設定 ##########################
-# gametype_tensuu_init_dict = { # 開局點數
-#     lang.yonin_ton: 25000,
-#     lang.yonin_ton_ikkyoku: 25000,
-#     lang.yonin_nan: 25000,
-#     lang.sannin_ton: 35000,
-#     lang.sannin_ton_ikkyoku: 35000,
-#     lang.sannin_nan: 35000
-# }
-
-# gametype_tensuu_over_dict = { # 最低結束點數
-#     lang.yonin_ton: 30000,
-#     lang.yonin_ton_ikkyoku: 30000,
-#     lang.yonin_nan: 30000,
-#     lang.sannin_ton: 40000,
-#     lang.sannin_ton_ikkyoku: 40000,
-#     lang.sannin_nan: 40000
-# }
-
-# is_tobitsuzuku = False # 是否擊飛繼續
-
-# is_last_oya_infinitely_renchan = False
-
-# shibarisuu = 1 # 飜縛
-
-# is_koyaku = False # 是否包含古役
-
-# is_aotenjyou = False # 是否使用青天井規則
-
-# is_kuitan = True # 是否有食斷
-
-# pinfu_ron_fusuu = 30 # 平和榮和符數
-
-# rienfontoitsu_fusuu = 2 # 連風對子符數
-
-################################################################
-
-#################### 驗證語言字形合法性 #########################
-
-if len({tokens.man, tokens.suo, tokens.pin, tokens.zuu}) != 4 or \
-    len({tokens.ton, tokens.nan, tokens.shaa, tokens.pei}) != 4 or \
-    len({tokens.yakuhai_ton,
-        tokens.yakuhai_nan,
-        tokens.yakuhai_shaa,
-        tokens.yakuhai_pei,
-        tokens.yakuhai_ton_chanfon,
-        tokens.yakuhai_nan_chanfon,
-        tokens.yakuhai_shaa_chanfon,
-        tokens.yakuhai_pei_chanfon,
-        tokens.yakuhai_haku,
-        tokens.yakuhai_hatsu,
-        tokens.yakuhai_chun}) != 11:
-    raise ValueError("language error")
-
-################################################################
-
 ######################### 基本字形定義 #########################
-##### key 不得重複 #####
-token_paitype_dict = { # 不得重複 # 不得為數字
+token_paitype_dict = { # 不得為數字
     tokens.man: "m",
     tokens.suo: "s",
     tokens.pin: "p", 
@@ -69,7 +12,7 @@ paitype_sign_number_dict = {
     "m": 1, "s": 2, "p": 3, "z": 4
 }
 
-fonwei_tuple = ( # 不得重複
+fonwei_tuple = (
     tokens.ton, tokens.nan, tokens.shaa, tokens.pei
 )
 
