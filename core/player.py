@@ -1,9 +1,4 @@
-"""
-    Player class
-    including calculate is_agari
-    HansuuResult class
-"""
-from core.ext import tokens
+from core.ext import tokens, support
 from core.pai import Pai, Tehai, is_agari
 
 class River:
@@ -11,12 +6,17 @@ class River:
         self.pai_list: list[Pai] = []
         self.riichi_hai_pos: int | None = None
 
+players_dict: dict[int, 'Player'] = {}
+
 class Player:
-    def __init__(self, ID: int):
+    def __init__(self, ID: int, tensuu: int, menfon: int):
+        if menfon not in support.fonwei_tuple:
+            raise ValueError(f"Unknown menfon: {menfon}")
+
         self.ID = ID # 0,1,2,(3)
-        self.tensuu: int 
-        self.menfon: str # lang.ton, lang.nan, lang.shaa, lang.pei
-        self.tehai: Tehai
+        self.tensuu: int = tensuu
+        self.menfon: int = menfon # tokens.ton, tokens.nan, tokens.shaa, tokens.pei
+        self.tehai: Tehai = Tehai([])
         self.river: River = River()
 
         self.tsumo_pai: Pai | None = None
@@ -29,6 +29,8 @@ class Player:
         self.doujin_furiten_pais: list[Pai] = []
         self.riichi_furiten_pais: list[Pai] = []
         self.datsu_furiten_pais: list[Pai] = []
+
+        players_dict[menfon] = self
 
     def __eq__(self, other):
         if not isinstance(other, Player):

@@ -52,5 +52,14 @@ chinroutoupai_paitype_tuple = ("1m", "9m", "1p", "9p", "1s", "9s")
 sanyuanpai_paitype_tuple = ("5z", "6z", "7z")
 suushiipai_paitype_tuple = ("1z", "2z", "3z", "4z")
 
-################################################################
+######################## 細節規則設置 ###########################
 
+yonin_dora_hyoujisuu = 10 # 四人指示牌數
+yonin_rinshansuu = 4 # 四人領上牌數
+
+
+sannin_dora_hyoujisuu = 10 # 三人指示牌數
+sannin_rinshansuu = 8 # 三人領上牌數
+
+
+################################################################

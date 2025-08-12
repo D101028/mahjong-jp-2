@@ -2,7 +2,7 @@ from typing import overload, Literal, Iterable
 
 from core.ext import support, yaku, tokens
 from core.ext.index import *
-from core.ext.rule import BaseRule
+from core.ext.rule import BaseRules
 from core.ext.yaku import Yaku, token_yaku_dict
 
 class Pai:
@@ -465,7 +465,7 @@ def is_agari(pai_list: list[Pai]):
         else:
             return True
     
-    if BaseRule.is_koyaku:
+    if BaseRules.is_koyaku:
         # 古役
 
         # 南北戰爭型
@@ -595,7 +595,7 @@ def get_agari_comb_list(pai_list: list[Pai]) -> list[AgariComb]:
         a1 = all_pai.copy()
 
     # 古役
-    if BaseRule.is_koyaku:
+    if BaseRules.is_koyaku:
         pass 
 
     return result
@@ -946,10 +946,10 @@ def get_agari_result_list(tehai: Tehai, agari_pai: Pai, param: Param) -> list[Ag
             han = Han(y, is_menchin)
             han_list.append(han)
             hansum += han.hansuu
-        if hansum < BaseRule.shibarisuu: # less than yaku shibari
+        if hansum < BaseRules.shibarisuu: # less than yaku shibari
             continue
         is_yakuman = yl[0].is_yakuman
-        if BaseRule.is_aotenjyou or not is_yakuman: # calculate dora
+        if BaseRules.is_aotenjyou or not is_yakuman: # calculate dora
             all_pai = tc.all_pais()
             # akadora
             akadora_suu = len(tc.akadora_list)
@@ -989,12 +989,12 @@ def get_agari_result_list(tehai: Tehai, agari_pai: Pai, param: Param) -> list[Ag
     return result
 
 def get_fusuu(yaku_list: list[Yaku], tehai_comb: TehaiComb, param: Param, is_menchin: bool) -> int:
-    # if not BaseRule.is_aotenjyou: # 非青天井則役滿不計符數
+    # if not BaseRules.is_aotenjyou: # 非青天井則役滿不計符數
     #     if yaku_list[0].is_yakuman: # 役滿以上
     #         return None
     if tehai_comb.tenpai_type == tokens.chiitoitsutanmenmachi: # 七對子
         return 25
-    if BaseRule.is_koyaku:
+    if BaseRules.is_koyaku:
         pass 
     if tehai_comb.tenpai_type in (tokens.kokushimusoutanmenmachi, tokens.kokushimusoujuusanmenmachi): # 國士
         return 30
@@ -1002,7 +1002,7 @@ def get_fusuu(yaku_list: list[Yaku], tehai_comb: TehaiComb, param: Param, is_men
         if param.is_tsumo:
             return 20
         else:
-            return BaseRule.pinfu_ron_fusuu
+            return BaseRules.pinfu_ron_fusuu
     fu = 20
     if is_menchin and param.is_ron: # 門前清榮胡加符
         fu += 10
@@ -1042,7 +1042,7 @@ def get_fusuu(yaku_list: list[Yaku], tehai_comb: TehaiComb, param: Param, is_men
     if temp == 1:
         fu += 2
     elif temp == 2:
-        fu += BaseRule.rienfontoitsu_fusuu
+        fu += BaseRules.rienfontoitsu_fusuu
     for p in minkou_pai:
         if p in yaochuu_list:
             fu += 4
@@ -1072,7 +1072,7 @@ def round_up(n: int, ndigits: int) -> int:
 
 def get_tensuu(hansuu: int, fusuu: int, is_yakuman: bool, param: Param) -> tuple[int, tuple[int] | tuple[int, int], int]:
     basic_tensuu: int
-    if BaseRule.is_aotenjyou or hansuu < 3 or (hansuu == 4 and fusuu <= 30) or (hansuu == 3 and fusuu <= 60):
+    if BaseRules.is_aotenjyou or hansuu < 3 or (hansuu == 4 and fusuu <= 30) or (hansuu == 3 and fusuu <= 60):
         basic_tensuu = fusuu * 2**(hansuu + 2)
     elif is_yakuman:
         basic_tensuu = 8000 * (hansuu//13)
@@ -1162,7 +1162,7 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
     
     # 斷么九
     if all((p not in yaochuu_list) for p in all_pai):
-        if not BaseRule.is_kuitan and not is_menchin:
+        if not BaseRules.is_kuitan and not is_menchin:
             pass 
         else:
             result.append(token_yaku_dict[tokens.tanyaochuu].copy())
@@ -1409,18 +1409,18 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
             result.append(token_yaku_dict[tokens.daisuushii].copy())
 
     # 古役
-    if BaseRule.is_koyaku:
+    if BaseRules.is_koyaku:
         pass 
 
     # 處理複合役
     koumokukoukan_dict: dict[int, tuple[Yaku, ...]] = {}
     koumokukoukan_dict.update(yaku.koumokukoukan_token_dict)
-    if BaseRule.is_koyaku:
+    if BaseRules.is_koyaku:
         koumokukoukan_dict.update(yaku.koumokukoukan_koyaku_token_dict)
-    if BaseRule.is_aotenjyou: # 青天井
+    if BaseRules.is_aotenjyou: # 青天井
         # 加入古役用複合役
         koumokukoukan_dict.update(yaku.oatenjyou_koumokukoukan_token_dict)
-        if BaseRule.is_koyaku:
+        if BaseRules.is_koyaku:
             koumokukoukan_dict.update(yaku.oatenjyou_koumokukoukan_koyaku_token_dict)
     else:
         # 若有役滿，則刪除役滿以外
