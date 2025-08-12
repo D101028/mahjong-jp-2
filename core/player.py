@@ -3,8 +3,8 @@
     including calculate is_agari
     HansuuResult class
 """
-from .ext import tokens
-from .pai import Pai, Tehai, is_agari
+from core.ext import tokens
+from core.pai import Pai, Tehai, is_agari
 
 class River:
     def __init__(self) -> None:

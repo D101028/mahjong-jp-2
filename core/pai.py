@@ -1,9 +1,9 @@
 from typing import overload, Literal, Iterable
 
-from .ext import support, yaku, tokens
-from .ext.index import *
-from .ext.rule import BaseRule
-from .ext.yaku import Yaku, token_yaku_dict
+from core.ext import support, yaku, tokens
+from core.ext.index import *
+from core.ext.rule import BaseRule
+from core.ext.yaku import Yaku, token_yaku_dict
 
 class Pai:
     def __init__(self, name: str | None):
