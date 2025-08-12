@@ -1,7 +1,6 @@
 from typing import overload, Literal
 
-from . import tokens
-from .ext import support, yaku
+from .ext import support, yaku, tokens
 from .ext.index import *
 from .ext.rule import BaseRule
 from .ext.yaku import Yaku, token_yaku_dict
@@ -246,7 +245,7 @@ class AgariComb:
     
     def __str__(self):
         output = ""
-        output += f"{self.hoora_type}: "
+        output += f"{tokens.to_lang(self.hoora_type)}: "
         for t in self.toitsu_list:
             output += "(" + ",".join([str(p.name) for p in t.pai_list]) + ")"
         output += " | "
@@ -314,7 +313,7 @@ class TehaiComb:
     
     def __str__(self):
         output = ""
-        output += f"{self.tenpai_type}："
+        output += f"{tokens.to_lang(self.tenpai_type)}："
         for t in self.toitsu_list:
             output += "(" + ",".join([str(p.name) for p in t.pai_list]) + ")"
         output += " | "
@@ -846,7 +845,7 @@ class Han:
             raise ValueError(f"name type error: {type(yaku_or_token).__name__}")
     
     def __str__(self) -> str:
-        return f"<Han {self.token}：{self.hansuu}飜>"
+        return f"<Han {tokens.to_lang(self.token)}：{self.hansuu}飜>"
 
 class AgariResult:
     def __init__(self, 

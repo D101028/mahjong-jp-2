@@ -1,4 +1,4 @@
-from .. import tokens
+from . import tokens
 
 ######################### 役種相關 ##############################
 class Yaku():

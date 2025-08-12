@@ -3,7 +3,7 @@
     including calculate is_agari
     HansuuResult class
 """
-from . import tokens
+from .ext import tokens
 from .pai import Pai, Tehai, is_agari
 
 class River:

@@ -1,3 +1,19 @@
+import sys
+import inspect
+
+from config import Config
+
+def to_lang(token: int | None) -> str | None:
+    if token is None:
+        return None
+    current_module = sys.modules[__name__]
+    module_locals = dict(inspect.getmembers(current_module))
+    for key, value in module_locals.items():
+        if value == token:
+            return Config.lang["core"].get(key)
+    else:
+        return None
+
 ton = 11
 nan = 12
 shaa = 13

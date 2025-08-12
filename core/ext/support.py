@@ -1,4 +1,4 @@
-from .. import tokens
+from . import tokens
 
 ######################### 遊戲規則設定 ##########################
 # gametype_tensuu_init_dict = { # 開局點數
