@@ -1,4 +1,4 @@
-from typing import overload, Literal
+from typing import overload, Literal, Iterable
 
 from .ext import support, yaku, tokens
 from .ext.index import *
@@ -22,7 +22,7 @@ class Pai:
                 if num > 7 or num == 0:
                     raise ValueError(f"Invalid value for Pai parameter name: {self.name}")
 
-            self.name = name
+            self.name = name # here will preserve the akadora msg
             self.number = int(name[0]) if name[0] != "0" else 5
             self.type = name[1]
             self.is_akadora = (name[0] == "0")
@@ -119,10 +119,10 @@ chinroutoupai_list = [Pai(p) for p in support.chinroutoupai_paitype_tuple]
 sanyuanpai_list = [Pai(p) for p in support.sanyuanpai_paitype_tuple]
 suushiipai_list = [Pai(p) for p in support.suushiipai_paitype_tuple]
 
-def create_pai_list(name_list: list[str] | str):
-    if (not isinstance(name_list, list) and not isinstance(name_list, str)) or \
-        (isinstance(name_list, list) and not all(isinstance(_, str) for _ in name_list)):
-        raise TypeError(f"name_list should be a str list or a str, not '{type(name_list).__name__}'")
+def create_pai_list(name_list: Iterable[str] | str):
+    if (not isinstance(name_list, Iterable) and not isinstance(name_list, str)) or \
+        (isinstance(name_list, Iterable) and not isinstance(name_list, str) and not all(isinstance(_, str) for _ in name_list)):
+        raise TypeError(f"name_list should be Iterable[str] or a str, not '{type(name_list).__name__}'")
     pai_list = []
     if isinstance(name_list, str):
         num_list: list[str] = []
@@ -137,8 +137,10 @@ def create_pai_list(name_list: list[str] | str):
     return pai_list
 
 class Mentsu:
-    def __init__(self, type: int, pai_list: list[Pai]):
-        self.type = type # tokens.koutsu, tokens.shuntsu, (tokens.ankan, tokens.kakan, tokens.minkan only appear in furo)
+    def __init__(self, type_: int, pai_list: list[Pai]):
+        if type_ not in (tokens.koutsu, tokens.shuntsu):
+            raise ValueError(f"Unknown type {type_} for Mentsu")
+        self.type = type_ # tokens.koutsu, tokens.shuntsu, (tokens.ankan, tokens.kakan, tokens.minkan only appear in furo)
         self.pai_list = pai_list
     
     def __str__(self):
@@ -184,37 +186,82 @@ class Toitsu:
     def copy(self):
         return Toitsu(pai_list=[p.copy() for p in self.pai_list])
 
-class Furo:
-    def __init__(self, type: int, pai_tuple: tuple[Pai], minpai_pai: Pai, be_minpai_player_id: int | None):
-        self.type: int = type # token.koutsu, token.shuntsu, token.ankan, token.kakan, token.minkan
-        self.pai_tuple: tuple[Pai] = pai_tuple
-        self.minpai_pai: Pai | None = minpai_pai # None if is ankan, if kakan -> koutsu be minpai player
-        self.be_minpai_player_id: int | None = be_minpai_player_id # None if is ankan, if kakan -> koutsu be minpai player
+class BasicFuro:
+    """基本副露：吃、碰形成的副露"""
+    # @overload
+    # def __init__(self, type_: int, pai_tuple: tuple[Pai, ...], minpai_pai: Literal[None], from_player_id: Literal[None]) -> None:
+    #     ...
+    # @overload
+    # def __init__(self, type_: int, pai_tuple: tuple[Pai, ...], minpai_pai: Pai, from_player_id: int):
+    #     ...
+
+    def __init__(self, 
+                 type_: int, 
+                 self_pai_tuple: tuple[Pai, Pai], 
+                 received_pai: Pai, 
+                 from_player_id: int) -> None:
+        if type_ not in (tokens.koutsu, tokens.shuntsu):
+            raise ValueError(f"Unknown type {type_} for BasicFuro")
+        self.type = type_ # token.koutsu, token.shuntsu
+        self.self_pai_tuple = self_pai_tuple
+        self.received_pai = received_pai
+        self.from_player_id = from_player_id
+
+        self.pai_tuple = (*self_pai_tuple, received_pai)
     
-    def to_agari_cal(self) -> list[Pai]:
-        return [p.copy() for p in self.pai_tuple[0:3]]
-    
-    def get_mentsu(self, is_kan_to_kou = False):
-        """槓轉換成刻會丟失紅寶牌資訊"""
-        if self.type in (tokens.koutsu, tokens.shuntsu):
-            return Mentsu(self.type, [p.copy() for p in self.pai_tuple])
-        elif is_kan_to_kou:
-            p = self.pai_tuple[0]
-            p.is_akadora = False
-            return Mentsu(tokens.koutsu, [p, p.copy(), p.copy()])
-        else:
-            return Mentsu(self.type, [p.copy() for p in self.pai_tuple])
-    
-    def __eq__(self, other):
-        if isinstance(other, Mentsu):
-            return other.type == self.type
-        if isinstance(other, Furo):
-            return other.type == self.type
-        return False
+    def to_mentsu(self):
+        return Mentsu(self.type, [p.copy() for p in self.pai_tuple])
     
     def __str__(self):
         output = "(" + " ".join([p.__str__() for p in self.pai_tuple]) + ")"
         return f"<Furo {output}>"
+
+class Minkan:
+    def __init__(self, self_pai_tuple: tuple[Pai, Pai, Pai], received_pai: Pai, from_player_id: int) -> None:
+        self.type = tokens.minkan
+        self.self_pai_tuple = self_pai_tuple
+        self.received_pai = received_pai
+        self.from_player_id = from_player_id
+
+        self.pai_tuple = (*self.self_pai_tuple, received_pai)
+    
+    def to_mentsu(self):
+        """會丟失紅寶牌等細節資訊"""
+        p = self.pai_tuple[0]
+        if p.is_akadora:
+            p = Pai(p.usual_name)
+        return Mentsu(tokens.koutsu, [p, p.copy(), p.copy()])
+
+class Kakan:
+    def __init__(self, koutsu_furo: BasicFuro, received_pai: Pai) -> None:
+        self.type = tokens.kakan
+        self.koutsu_furo = koutsu_furo
+        self.received_pai = received_pai
+
+        self.pai_tuple = (*koutsu_furo.pai_tuple, received_pai)
+    
+    def to_mentsu(self):
+        """會丟失紅寶牌等細節資訊"""
+        p = self.pai_tuple[0]
+        if p.is_akadora:
+            p = Pai(p.usual_name)
+        return Mentsu(tokens.koutsu, [p, p.copy(), p.copy()])
+
+class Ankan:
+    def __init__(self, self_pai_tuple: tuple[Pai, Pai, Pai, Pai]) -> None:
+        self.type = tokens.ankan
+        self.self_pai_tuple = self_pai_tuple
+
+        self.pai_tuple = self_pai_tuple
+    
+    def to_mentsu(self):
+        """會丟失紅寶牌等細節資訊"""
+        p = self.pai_tuple[0]
+        if p.is_akadora:
+            p = Pai(p.usual_name)
+        return Mentsu(tokens.koutsu, [p, p.copy(), p.copy()])
+
+FuroType = BasicFuro | Minkan | Kakan | Ankan
 
 class AgariComb:
     # 不考慮摸到哪張牌，拆分後的胡牌手牌 # 可為 2 5 8 11 14 張牌
@@ -279,7 +326,7 @@ class TehaiComb:
                  waiting_comb: list[Pai] | None = None, 
                  toitsu_list: list[Toitsu] | None = None, 
                  mentsu_list: list[Mentsu] | None = None, 
-                 furo_list: list[Furo] | None = None, 
+                 furo_list: list[FuroType] | None = None, 
                  tanhai_list: list[Pai] | None = None, 
                  akadora_revise_list: list[Pai] | None = None):
         if waiting_comb is None:
@@ -568,7 +615,7 @@ class Tehai:
             raise TypeError(f"pai_list must be a list or str, not {type(pai_list).__name__}")
         pai_list = [Pai(p) if isinstance(p, str) else p.copy() for p in pai_list]
         self.pai_list = pai_list  # len = 1 4 7 10 13
-        self.furo_list: list[Furo] = []
+        self.furo_list: list[FuroType] = []
     
     def __str__(self) -> str:
         output = ""
@@ -836,7 +883,7 @@ class Han:
                 self.hansuu = yaku_or_token.ori_hansuu - 1
             else:
                 self.hansuu = yaku_or_token.ori_hansuu
-        elif isinstance(yaku_or_token, str): # dora # token.dora, token.akadora, token.uradora
+        elif isinstance(yaku_or_token, int): # dora # token.dora, token.akadora, token.uradora
             if dora_hansuu is None:
                 raise ValueError('`dora_hansuu` could not be None when name is of type str')
             self.token = yaku_or_token
@@ -920,14 +967,16 @@ def get_agari_result_list(tehai: Tehai, agari_pai: Pai, param: Param) -> list[Ag
                 uradora_suu = 0
                 for uradora_pointer in param.uradora_pointers:
                     uradora_suu += all_pai.count(uradora_pointer.next(True))
-                hansum += uradora_suu
-                han_list.append(Han(tokens.uradora, is_menchin, uradora_suu))
+                if uradora_suu > 0:
+                    hansum += uradora_suu
+                    han_list.append(Han(tokens.uradora, is_menchin, uradora_suu))
         
         # 符數
         fusuu = get_fusuu(yl, tc, param, is_menchin)
 
         # 點數
         basic_tensuu, tensuu, all_tensuu = get_tensuu(hansum, fusuu, is_yakuman, param)
+        
         result.append(AgariResult(is_yakuman, tc, yl, han_list, hansum, fusuu, basic_tensuu, tensuu, all_tensuu))
     return result
 
@@ -1034,7 +1083,7 @@ def get_tensuu(hansuu: int, fusuu: int, is_yakuman: bool, param: Param) -> tuple
         if param.is_tsumo:
             n = round_up(basic_tensuu*2, 2)
             tensuu = (n, )
-            all_tensuu = n*6
+            all_tensuu = n*3
         else:
             tensuu = (round_up(basic_tensuu*6, 2), )
             all_tensuu = tensuu[0]
@@ -1058,7 +1107,7 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
     all_pai.sort(key = lambda p: p.int_sign())
     
     # 獲取面子、順子、刻子列表(所有槓轉刻)
-    mentsu_furo_list = tehai_comb.mentsu_list + [f.get_mentsu(is_kan_to_kou=True) for f in tehai_comb.furo_list] # lost akadora msg
+    mentsu_furo_list = tehai_comb.mentsu_list + [f.to_mentsu() for f in tehai_comb.furo_list] # lost akadora msg
     if tehai_comb.tenpai_type in (tokens.ryanmenmachi, tokens.henchoomachi, tokens.kanchoomachi, tokens.soohoomachi):
         if len(tehai_comb.waiting_comb) != 2:
             raise RuntimeError("length error")
@@ -1104,7 +1153,7 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
             result.append(token_yaku_dict[tokens.houteiraoyui].copy())
     
     # 斷么九
-    if all((not p in yaochuu_list) for p in all_pai):
+    if all((p not in yaochuu_list) for p in all_pai):
         if not BaseRule.is_kuitan and not is_menchin:
             pass 
         else:
