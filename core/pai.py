@@ -147,6 +147,12 @@ class Pai:
         """去除紅寶牌資訊"""
         self.is_akadora = False
 
+    def get_normal(self) -> 'Pai':
+        """回傳去除紅寶牌資訊的 Pai"""
+        new = self.copy()
+        new.normalize()
+        return new
+
     def to_akadora(self) -> None:
         """轉換成紅寶牌"""
         if self.number != 5 or self.type == support.token_paitype_dict[tokens.zuu]:
@@ -267,8 +273,7 @@ class Minkan:
     
     def to_mentsu(self):
         """會丟失紅寶牌等細節資訊"""
-        p = self.pai_tuple[0].copy()
-        p.normalize()
+        p = self.pai_tuple[0].get_normal()
         return Mentsu(tokens.koutsu, [p, p.copy(), p.copy()])
 
 class Kakan:
@@ -281,8 +286,7 @@ class Kakan:
     
     def to_mentsu(self):
         """會丟失紅寶牌等細節資訊"""
-        p = self.pai_tuple[0].copy()
-        p.normalize()
+        p = self.pai_tuple[0].get_normal()
         return Mentsu(tokens.koutsu, [p, p.copy(), p.copy()])
 
 class Ankan:
@@ -294,8 +298,7 @@ class Ankan:
     
     def to_mentsu(self):
         """會丟失紅寶牌等細節資訊"""
-        p = self.pai_tuple[0].copy()
-        p.normalize()
+        p = self.pai_tuple[0].get_normal()
         return Mentsu(tokens.koutsu, [p, p.copy(), p.copy()])
 
 FuroType = BasicFuro | Minkan | Kakan | Ankan
