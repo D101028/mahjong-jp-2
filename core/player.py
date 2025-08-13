@@ -9,11 +9,12 @@ class River:
 players_dict: dict[int, 'Player'] = {}
 
 class Player:
-    def __init__(self, ID: int, tensuu: int, menfon: int):
+    def __init__(self, ID: int, name: str, tensuu: int, menfon: int):
         if menfon not in support.fonwei_tuple:
             raise ValueError(f"Unknown menfon: {menfon}")
 
         self.ID = ID # 0,1,2,(3)
+        self.name = name
         self.tensuu: int = tensuu
         self.menfon: int = menfon # tokens.ton, tokens.nan, tokens.shaa, tokens.pei
         self.tehai: Tehai = Tehai([])

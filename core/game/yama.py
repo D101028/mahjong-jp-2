@@ -101,7 +101,7 @@ class YamaChain:
 
 class YoninYama(YamaChain):
     def __init__(self) -> None:
-        if CommonRules.using_akadora:
+        if CommonRules.akadora_enabled:
             super().__init__(
                 PAI_INDEX_WITH_AKADORA, support.yonin_rinshansuu, support.yonin_dora_hyoujisuu
             )
@@ -112,7 +112,7 @@ class YoninYama(YamaChain):
 
 class SanninYama(YamaChain):
     def __init__(self) -> None:
-        if CommonRules.using_akadora:
+        if CommonRules.akadora_enabled:
             super().__init__(
                 PAI_INDEX_SANNIN_WITH_AKADORA, support.sannin_rinshansuu, support.sannin_dora_hyoujisuu
             )

@@ -14,7 +14,7 @@ class BaseRules:
 
 class CommonRules:
 
-    using_akadora = True # 啟用紅寶牌
+    akadora_enabled = True # 啟用紅寶牌
 
     is_tobitsuzuku = False # 是否擊飛繼續
 
