@@ -4,7 +4,7 @@
 「junme」計數：玩家初始 junme 為 0，每打出一張牌會 +1。
 """
 
-from typing import Literal, Iterable
+from typing import Literal, Iterable, Union, overload
 
 from core.ext import support, yaku, tokens
 from core.ext.index import *
@@ -12,32 +12,23 @@ from core.ext.rule import BaseRules
 from core.ext.yaku import Yaku, token_yaku_dict
 
 class Pai:
-    def __init__(self, name: str | None):
-        if not isinstance(name, str | None):
+    def __init__(self, name: str):
+        if not isinstance(name, str):
             raise TypeError(f"Pai() argument must be a string or None, not '{type(name).__name__}'")
-        self.name: str | None
-        self.number: int | None
-        self.type: str | None
-        self.is_akadora: bool | None
-        self.usual_name: str | None
-        if name is None:
-            # null type
-            self.name, self.number, self.type, self.is_akadora, self.usual_name = None, None, None, None, None
-        else:
-            if len(name) != 2 or \
-                not name[0].isdigit() or \
-                name[1] not in (value for _, value in support.token_paitype_dict.items()):
-                raise ValueError(f"Invalid value for Pai parameter name: {self.name}")
-            if name[1] == support.token_paitype_dict[tokens.zuu]:
-                num = int(name[0])
-                if num > 7 or num == 0:
-                    raise ValueError(f"Invalid value for Pai parameter name: {self.name}")
+        if len(name) != 2 or \
+            not name[0].isdigit() or \
+            name[1] not in (value for _, value in support.token_paitype_dict.items()):
+            raise ValueError(f"Invalid value for Pai parameter name: {name}")
+        if name[1] == support.token_paitype_dict[tokens.zuu]:
+            num = int(name[0])
+            if num > 7 or num == 0:
+                raise ValueError(f"Invalid value for Pai parameter name: {name}")
 
-            self.name = name # here will preserve the akadora msg
-            self.number = int(name[0]) if name[0] != "0" else 5
-            self.type = name[1]
-            self.is_akadora = (name[0] == "0")
-            self.usual_name = str(self.number) + self.type
+        self.name: str = name # here will preserve the akadora msg
+        self.number: int = int(name[0]) if name[0] != "0" else 5
+        self.type: str = name[1]
+        self.is_akadora: bool = (name[0] == "0")
+        self.usual_name: str = str(self.number) + self.type
     
     def __hash__(self) -> int:
         return hash(self.usual_name)
@@ -47,66 +38,99 @@ class Pai:
             raise ValueError(f"Undefined operator __eq__ for Pai and {type(other).__name__}")
         if isinstance(other, str):
             other = Pai(other)
-        if other.type is None or self.type is None:
-            return other.type is None and self.type is None
         return other.type == self.type and other.number == self.number
     
     def __str__(self):
         return f"<Pai {self.name}>"
 
-    def equal(self, other, is_strict: bool = True) -> bool:
+    def equal(self, other: Union['Pai', str], is_strict: bool = True) -> bool:
         if not isinstance(other, Pai | str):
             raise TypeError(f"other must be a Pai or str, not {type(other).__name__}")
         if isinstance(other, str):
             other = Pai(other)
-        if self.type is None or other.type is None:
-            return False
         if is_strict:
             return self.name == other.name
-        return other.type == self.type and other.number == self.number
+        return self == other
 
     def int_sign(self, is_include_akadora = False) -> int:
         # 1~9; 11~19; 21~29; 31~39; 41~47; 00 10 20 (akadora)
-        if not isinstance(self.number, int):
-            raise TypeError(f"cannot get sign with self.type: {type(self.number).__name__}")
-        if not isinstance(self.type, str):
-            raise TypeError(f"cannot get sign with self.type: {type(self.type).__name__}")
-        if not isinstance(self.name, str):
-            raise TypeError(f"cannot get sign with self.type: {type(self.name).__name__}")
         if not is_include_akadora:
             return support.paitype_sign_number_dict[self.type]*10 + self.number
         else:
             return support.paitype_sign_number_dict[self.type]*10 + int(self.name[0])
 
-    def next(self, allow_mod = False) -> 'Pai':
-        if self.number is None or self.type is None or self.name is None:
-            return Pai(None)
+    @overload
+    def next(self, allow_mod: Literal[False] = False) -> Union['Pai', None]:
+        ...
+    @overload
+    def next(self, allow_mod: Literal[True]) -> 'Pai':
+        ...
+    def next(self, allow_mod = False) -> Union['Pai', None]:
         if self.type == support.token_paitype_dict[tokens.zuu]:
             if self.number >= 7 and not allow_mod:
-                return Pai(None) 
+                return None
             return Pai(str((self.number + 1) % 7) + self.type)
         else:
             if self.number >= 9 and not allow_mod:
-                return Pai(None) 
+                return None
             return Pai(str((self.number + 1) % 10) + self.type)
     
-    def previous(self, allow_mod = False) -> 'Pai':
-        if not isinstance(self.number, int):
-            raise TypeError(f"cannot get previous with self.type: {type(self.number).__name__}")
-        if not isinstance(self.type, str):
-            raise TypeError(f"cannot get previous with self.type: {type(self.type).__name__}")
-        if not isinstance(self.name, str):
-            raise TypeError(f"cannot get previous with self.type: {type(self.name).__name__}")
-        if self.type is None:
-            return Pai(None)
+    @overload
+    def previous(self, allow_mod: Literal[False] = False) -> Union['Pai', None]:
+        ...
+    @overload
+    def previous(self, allow_mod: Literal[True]) -> 'Pai':
+        ...
+    def previous(self, allow_mod = False) -> Union['Pai', None]:
         if self.type == support.token_paitype_dict[tokens.zuu]:
             if self.number <= 1 and not allow_mod:
-                return Pai(None)
+                return None
             return Pai(str((self.number - 1) % 7) + self.type)
         else:
             if self.number <= 1 and not allow_mod:
-                return Pai(None)
+                return None
             return Pai(str((self.number - 1) % 10) + self.type)
+
+    @overload
+    def get_shuntsu(self, form: Literal['head'] = 'head') -> tuple['Pai', Union['Pai', None], Union['Pai', None]]:
+        ...
+    @overload
+    def get_shuntsu(self, form: Literal['middle']) -> tuple[Union['Pai', None], 'Pai', Union['Pai', None]]:
+        ...
+    @overload
+    def get_shuntsu(self, form: Literal['tail']) -> tuple[Union['Pai', None], Union['Pai', None], 'Pai']:
+        ...
+    def get_shuntsu(self, form: Literal['head', 'middle', 'tail'] = 'head') -> tuple[Union['Pai', None], Union['Pai', None], Union['Pai', None]]:
+        if self.type == support.token_paitype_dict[tokens.zuu]:
+            return (self, None, None)
+        if form == 'head':
+            next1 = self.next()
+            if next1 is None:
+                return (self, None, None)
+            next2 = next1.next()
+            return (self, next1, next2)
+        elif form == 'middle':
+            return (self.previous(), self, self.next())
+        elif form == 'tail':
+            pre1 = self.previous()
+            if pre1 is None:
+                return (None, None, self)
+            pre2 = pre1.previous()
+            return (pre2, pre1, self)
+
+    def get_near(self) -> tuple[Union['Pai', None], Union['Pai', None], 'Pai', Union['Pai', None], Union['Pai', None]]:
+        if self.type == support.token_paitype_dict[tokens.zuu]:
+            return (None, None, self, None, None)
+        pre1: Union['Pai', None] = self.previous()
+        pre2: Union['Pai', None] = None
+        next1: Union['Pai', None] = self.next()
+        next2: Union['Pai', None] = None
+        next1 = self.next()
+        if next1 is not None:
+            next2 = next1.next()
+        if pre1 is not None:
+            pre2 = pre1.previous()
+        return (pre2, pre1, self, next1, next2)
 
     def copy(self) -> 'Pai':
         new_pai = Pai(self.name)
@@ -119,25 +143,10 @@ class Pai:
 
     def to_akadora(self) -> None:
         """轉換成紅寶牌"""
-        if self.type is None or self.number != 5:
-            raise Exception("Could not change this pai to akadora")
+        if self.number != 5 or self.type == support.token_paitype_dict[tokens.zuu]:
+            raise Exception(f"Could not change the pai `{self}` to akadora")
         self.name = f"0{self.type}"
         self.is_akadora = True
-
-    @staticmethod
-    def strict_remove(pai_list: list['Pai'], pai):
-        if not isinstance(pai, Pai):
-            raise TypeError(f"pai must be a Pai, not {type(pai).__name__}")
-        pos: int | None = None
-        count = 0
-        for p in pai_list:
-            if p.equal(pai):
-                pos = count
-                break
-            count += 1
-        if pos is None:
-            return 
-        del pai_list[pos]
 
 yaochuu_list = [Pai(p) for p in support.yaochuu_paitype_tuple]
 ryuuiisoopai_list = [Pai(p) for p in support.ryuuiisoopai_paitype_tuple]
@@ -470,17 +479,18 @@ def is_agari(pai_list: list[Pai]):
             if a1.count(a1[0]) == 3:
                 a2.append((a1[0],)*3)
                 a1 = a1[3:]
-            elif a1[0].type != support.token_paitype_dict[tokens.zuu] and a1[0] in a1 and a1[0].next() in a1 and a1[0].next().next() in a1:
-                a, ap, app = a1[0], a1[0].next(), a1[0].next().next()
+                continue
+            a, ap, app = a1[0].get_shuntsu()
+            if ap is not None and app is not None:
                 a2.append((a, ap, app))
                 a1.remove(a)
                 a1.remove(ap)
                 a1.remove(app)
-            else:
-                # 重製
-                a1 = all_pai.copy()
-                a2 = []
-                break
+                continue
+            # 重製
+            a1 = all_pai.copy()
+            a2 = []
+            break
         else:
             return True
     
@@ -499,7 +509,7 @@ def is_agari(pai_list: list[Pai]):
             all_pai_temp.remove(pei_pai)
             all_pai_temp.remove(pei_pai)
             l = [1,1,1,5,6,6,8,8]
-            if l == sorted([pai.number for pai in all_pai_temp]): # type: ignore
+            if l == sorted([pai.number for pai in all_pai_temp]):
                 return True
 
     return False
@@ -512,10 +522,8 @@ def create_mentsu_list(pai_list: list[Pai], first_koutsu_deny: bool = False)  ->
     result = []
     if all_pai.count(all_pai[0]) < 3:
         # 沒刻子拔
-        p = all_pai[0].copy()
-        pp = p.next()
-        ppp = pp.next()
-        if p.type != support.token_paitype_dict[tokens.zuu] and pp in all_pai and ppp in all_pai:
+        p, pp, ppp = all_pai[0].copy().get_shuntsu()
+        if pp is not None and ppp is not None and pp in all_pai and ppp in all_pai:
             mentsu = Mentsu(tokens.shuntsu, [p, pp, ppp])
             all_pai.remove(p)
             all_pai.remove(pp)
@@ -535,10 +543,8 @@ def create_mentsu_list(pai_list: list[Pai], first_koutsu_deny: bool = False)  ->
 
             # 再拔順子
             all_pai = [pai.copy() for pai in pai_list]
-            p = all_pai[0].copy()
-            pp = p.next()
-            ppp = pp.next()
-            if p.type != support.token_paitype_dict[tokens.zuu] and pp in all_pai and ppp in all_pai:
+            p, pp, ppp = all_pai[0].copy().get_shuntsu()
+            if pp is not None and ppp is not None and pp in all_pai and ppp in all_pai:
                 mentsu = Mentsu(tokens.shuntsu, [p, pp, ppp])
                 all_pai.remove(p)
                 all_pai.remove(pp)
@@ -548,10 +554,8 @@ def create_mentsu_list(pai_list: list[Pai], first_koutsu_deny: bool = False)  ->
         else:
             # 第一張不能當刻子
             # 拔順子
-            p = all_pai[0].copy()
-            pp = p.next()
-            ppp = pp.next()
-            if p.type != support.token_paitype_dict[tokens.zuu] and pp in all_pai and ppp in all_pai:
+            p, pp, ppp = all_pai[0].copy().get_shuntsu()
+            if pp is not None and ppp is not None and pp in all_pai and ppp in all_pai:
                 mentsu = Mentsu(tokens.shuntsu, [p, pp, ppp])
                 all_pai.remove(p)
                 all_pai.remove(pp)
@@ -786,9 +790,10 @@ class Tehai:
     def is_able_to_chii(self, pai: Pai) -> bool:
         if pai.type == support.token_paitype_dict[tokens.zuu]:
             return False
-        if any((pai.next() in self.pai_list and pai.next().next() in self.pai_list, 
-                pai.previous() in self.pai_list and pai.next() in self.pai_list, 
-                pai.previous() in self.pai_list and pai.previous().previous() in self.pai_list)):
+        pre2, pre1, _, next1, next2 = pai.get_near()
+        if (next1 in self.pai_list and next2 in self.pai_list) or \
+           (pre1 in self.pai_list and next1 in self.pai_list) or \
+           (pre1 in self.pai_list and pre2 in self.pai_list):
             return True
         return False
 
