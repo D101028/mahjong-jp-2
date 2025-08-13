@@ -17,7 +17,7 @@ class Pai:
             raise TypeError(f"Pai() argument must be a string or None, not '{type(name).__name__}'")
         if len(name) != 2 or \
             not name[0].isdigit() or \
-            name[1] not in (value for _, value in support.token_paitype_dict.items()):
+            name[1] not in support.token_paitype_dict.values():
             raise ValueError(f"Invalid value for Pai parameter name: {name}")
         if name[1] == support.token_paitype_dict[tokens.zuu]:
             num = int(name[0])

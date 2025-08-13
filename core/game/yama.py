@@ -3,7 +3,7 @@ from typing import Iterable
 
 from core.pai import Pai
 from core.player import Player, players_dict
-from core.ext import support, tokens
+from core.ext import support
 from core.ext.index import *
 from core.ext.rule import CommonRules, YoninRules, SanninRules
 
@@ -57,7 +57,7 @@ class YamaChain:
                     player_num = len(support.fonwei_tuple) - 1
                     break
                 else:
-                    raise Exception(f"Could not get some players: {players_dict}")
+                    raise Exception(f"Could not get some players from players_dict: {players_dict}")
             else:
                 players.append(player)
         else:
