@@ -24,12 +24,19 @@ class Pai:
             if num > 7 or num == 0:
                 raise ValueError(f"Invalid value for Pai parameter name: {name}")
 
-        self.name: str = name # here will preserve the akadora msg
         self.number: int = int(name[0]) if name[0] != "0" else 5
         self.type: str = name[1]
         self.is_akadora: bool = (name[0] == "0")
-        self.usual_name: str = str(self.number) + self.type
-    
+
+    @property
+    def name(self) -> str:
+        if self.is_akadora:
+            return f"0{self.type}"
+        return f"{self.number}{self.type}"
+    @property
+    def usual_name(self) -> str:
+        return f"{self.number}{self.type}"
+
     def __hash__(self) -> int:
         return hash(self.usual_name)
 
@@ -138,14 +145,12 @@ class Pai:
 
     def normalize(self) -> None:
         """去除紅寶牌資訊"""
-        self.name = self.usual_name
         self.is_akadora = False
 
     def to_akadora(self) -> None:
         """轉換成紅寶牌"""
         if self.number != 5 or self.type == support.token_paitype_dict[tokens.zuu]:
             raise Exception(f"Could not change the pai `{self}` to akadora")
-        self.name = f"0{self.type}"
         self.is_akadora = True
 
 yaochuu_list = [Pai(p) for p in support.yaochuu_paitype_tuple]
