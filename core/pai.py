@@ -1,3 +1,9 @@
+"""
+「junme」、「巡目」、「巡目破壞」：一巡指玩家從打完一張牌到打出下一張牌之間的過程，
+巡目破壞指玩家打出下一張牌之前，有出現會破壞巡目的行為，如任一玩家鳴牌。
+「junme」計數：玩家初始 junme 為 0，每打出一張牌會 +1。
+"""
+
 from typing import overload, Literal, Iterable
 
 from core.ext import support, yaku, tokens
@@ -784,102 +790,27 @@ class Tehai:
         return False
 
 class Param:
-    @overload
-    def __init__(
-        self,
-        is_riichi: Literal[True],
-        riichi_junme: int,
-        agari_junme: int,
-        is_tsumo: Literal[True],
-        is_ron: Literal[False],
-        is_chyankan: bool,
-        available_pai_num: int,
-        menfon: int,
-        chanfon: int,
-        is_rinshanpai_agari: bool,
-        dora_pointers: list[Pai],
-        uradora_pointers: list[Pai] | None = None
-    ) -> None: ...
-    
-    @overload
-    def __init__(
-        self,
-        is_riichi: Literal[True],
-        riichi_junme: int,
-        agari_junme: int,
-        is_tsumo: Literal[False],
-        is_ron: Literal[True],
-        is_chyankan: bool,
-        available_pai_num: int,
-        menfon: int,
-        chanfon: int,
-        is_rinshanpai_agari: bool,
-        dora_pointers: list[Pai],
-        uradora_pointers: list[Pai] | None = None
-    ) -> None: ...
-
-    @overload
-    def __init__(
-        self,
-        is_riichi: Literal[False],
-        riichi_junme: None,
-        agari_junme: int,
-        is_tsumo: Literal[True],
-        is_ron: Literal[False],
-        is_chyankan: bool,
-        available_pai_num: int,
-        menfon: int,
-        chanfon: int,
-        is_rinshanpai_agari: bool,
-        dora_pointers: list[Pai],
-        uradora_pointers: list[Pai] | None = None
-    ) -> None: ...
-    
-    @overload
-    def __init__(
-        self,
-        is_riichi: Literal[False],
-        riichi_junme: None,
-        agari_junme: int,
-        is_tsumo: Literal[False],
-        is_ron: Literal[True],
-        is_chyankan: bool,
-        available_pai_num: int,
-        menfon: int,
-        chanfon: int,
-        is_rinshanpai_agari: bool,
-        dora_pointers: list[Pai],
-        uradora_pointers: list[Pai] | None = None
-    ) -> None: ...
-
     def __init__(self, 
-                 is_riichi: bool, 
                  riichi_junme: int | None, 
                  agari_junme: int, 
-                 is_tsumo: bool, 
-                 is_ron: bool, 
+                 agari_type: Literal["ron", "tsumo"], 
+                 break_junme: bool, 
                  is_chyankan: bool, 
-                 available_pai_num: int, 
+                 remaining_pai_num: int, 
                  menfon: int, 
                  chanfon: int, 
                  is_rinshanpai_agari: bool, 
                  dora_pointers: list[Pai], 
                  uradora_pointers: list[Pai] | None = None) -> None:
-
-        if is_riichi and riichi_junme is None:
-            raise ValueError("riichi_junme could not be None if is_riichi is True")
-        if riichi_junme is not None and not is_riichi:
-            raise ValueError("riichi_junme should be None if is_riichi is False")
-        if (is_tsumo and is_ron) or (not is_tsumo and not is_ron):
-            raise ValueError("is_tsumo and is_ron could not be the same at the same time")
+        if agari_type not in ("ron", "tsumo"):
+            raise ValueError("agari_type must be 'ron' or 'tsumo'")
         
-        self.is_riichi = is_riichi
-        self.riichi_junme = riichi_junme
+        self.riichi_junme = riichi_junme # 打出立直牌後的巡目
         self.agari_junme = agari_junme
-        self.is_tsumo = is_tsumo
-        self.is_ron = is_ron
+        self.agari_type: Literal["ron", "tsumo"] = agari_type
+        self.break_junme: bool = break_junme
         self.is_chyankan = is_chyankan
-        self.available_pai_num = available_pai_num
+        self.remaining_pai_num = remaining_pai_num
         self.menfon = menfon
         self.chanfon = chanfon
         self.is_rinshanpai_agari = is_rinshanpai_agari
@@ -983,7 +914,7 @@ def get_agari_result_list(tehai: Tehai, agari_pai: Pai, param: Param) -> list[Ag
                 hansum += dora_suu
                 han_list.append(Han(tokens.dora, is_menchin, dora_suu))
             # uradora
-            if param.is_riichi:
+            if param.riichi_junme is not None:
                 uradora_suu = 0
                 for uradora_pointer in param.uradora_pointers:
                     uradora = uradora_pointer.next(True)
@@ -1013,14 +944,14 @@ def get_fusuu(yaku_list: list[Yaku], tehai_comb: TehaiComb, param: Param, is_men
     if tehai_comb.tenpai_type in (tokens.kokushimusoutanmenmachi, tokens.kokushimusoujuusanmenmachi): # 國士
         return 30
     elif token_yaku_dict[tokens.pinfu] in yaku_list: # 平和
-        if param.is_tsumo:
+        if param.agari_type == 'tsumo':
             return 20
         else:
             return BaseRules.pinfu_ron_fusuu
     fu = 20
-    if is_menchin and param.is_ron: # 門前清榮胡加符
+    if is_menchin and param.agari_type == 'ron': # 門前清榮胡加符
         fu += 10
-    if param.is_tsumo: # 自摸符
+    if param.agari_type == 'tsumo': # 自摸符
         fu += 2
     if tehai_comb.tenpai_type in (tokens.kanchoomachi, tokens.tankimachi, tokens.henchoomachi): # 中洞、邊獨、單騎聽牌
         fu += 2
@@ -1041,7 +972,7 @@ def get_fusuu(yaku_list: list[Yaku], tehai_comb: TehaiComb, param: Param, is_men
         if m.type == tokens.koutsu:
             ankou_pai.append(m.pai_list[0])
     if tehai_comb.tenpai_type == tokens.soohoomachi: # 雙碰聽計刻
-        if param.is_tsumo:
+        if param.agari_type == 'tsumo':
             ankan_pai.append(tehai_comb.tenpai)
         else: # 榮和計為明刻
             minkan_pai.append(tehai_comb.tenpai)
@@ -1102,7 +1033,7 @@ def get_tensuu(hansuu: int, fusuu: int, is_yakuman: bool, param: Param) -> tuple
         basic_tensuu = 8000
     
     if param.menfon == support.fonwei_tuple[0]: # 莊
-        if param.is_tsumo:
+        if param.agari_type == 'tsumo':
             n = round_up(basic_tensuu*2, 2)
             tensuu = (n, )
             all_tensuu = n*3
@@ -1110,7 +1041,7 @@ def get_tensuu(hansuu: int, fusuu: int, is_yakuman: bool, param: Param) -> tuple
             tensuu = (round_up(basic_tensuu*6, 2), )
             all_tensuu = tensuu[0]
     else: # 閒
-        if param.is_tsumo:
+        if param.agari_type == 'tsumo':
             n1 = round_up(basic_tensuu*2, 2)
             n2 = round_up(basic_tensuu, 2)
             tensuu = (n1, n2)
@@ -1151,27 +1082,26 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
     is_menchin = all(furo.type == tokens.ankan for furo in tehai_comb.furo_list)
 
     # 立直、雙立直、一發
-    if param.is_riichi:
-        if param.riichi_junme is None:
-            raise ValueError("param.riichi_junme could not be None if param.is_riichi is True")
+    if param.riichi_junme is not None:
         if param.riichi_junme == 1:
             result.append(token_yaku_dict[tokens.dabururiichi].copy())
         else:
             result.append(token_yaku_dict[tokens.riichi].copy())
-        if param.is_tsumo and param.agari_junme == param.riichi_junme + 1: # 一發自摸
-            result.append(token_yaku_dict[tokens.ippatsu].copy())
-        elif param.is_ron and param.agari_junme == param.riichi_junme: # 一發榮和
-            result.append(token_yaku_dict[tokens.ippatsu].copy())
+        if not param.break_junme:
+            if param.agari_type == 'tsumo' and param.agari_junme == param.riichi_junme: # 一發自摸
+                result.append(token_yaku_dict[tokens.ippatsu].copy())
+            elif param.agari_type == 'ron' and param.agari_junme == param.riichi_junme: # 一發榮和
+                result.append(token_yaku_dict[tokens.ippatsu].copy())
 
     # 搶槓
     if param.is_chyankan:
         result.append(token_yaku_dict[tokens.chyankan].copy())
 
     # 海底撈月、河底撈魚
-    if param.available_pai_num == 0:
-        if param.is_tsumo:
+    if param.remaining_pai_num == 0:
+        if param.agari_type == 'tsumo':
             result.append(token_yaku_dict[tokens.haiteiraoyue].copy())
-        elif param.is_ron:
+        elif param.agari_type == 'ron':
             result.append(token_yaku_dict[tokens.houteiraoyui].copy())
     
     # 斷么九
@@ -1202,7 +1132,7 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
     # 門清役
     if is_menchin: # 門清
         # 自摸
-        if param.is_tsumo:
+        if param.agari_type == 'tsumo':
             result.append(token_yaku_dict[tokens.tsumo].copy())
 
         # 平和
@@ -1229,7 +1159,7 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
 
         # 四暗刻
         if len(koutsu_list) == 4:
-            if tehai_comb.tenpai_type == tokens.soohoomachi and param.is_tsumo:
+            if tehai_comb.tenpai_type == tokens.soohoomachi and param.agari_type == 'tsumo':
                 result.append(token_yaku_dict[tokens.suuankoo].copy())
             elif tehai_comb.tenpai_type == tokens.tankimachi:
                 result.append(token_yaku_dict[tokens.suuankootanki].copy())
@@ -1258,7 +1188,7 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
                         result.append(token_yaku_dict[tokens.chuurenpouton].copy())
 
     # 嶺上開花
-    if param.is_tsumo and param.is_rinshanpai_agari:
+    if param.agari_type == 'tsumo' and param.is_rinshanpai_agari:
         result.append(token_yaku_dict[tokens.rinshankaihou].copy())
 
     # 七對子
@@ -1320,7 +1250,7 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
         for f in tehai_comb.furo_list: # 暗槓
             if f.type == tokens.ankan:
                 ankou_ankan_count += 1
-        if param.is_tsumo and tehai_comb.tenpai_type == tokens.soohoomachi: # 自摸雙碰多一暗刻
+        if param.agari_type == 'tsumo' and tehai_comb.tenpai_type == tokens.soohoomachi: # 自摸雙碰多一暗刻
             ankou_ankan_count += 1
         if ankou_ankan_count >= 3:
             result.append(token_yaku_dict[tokens.sanankoo].copy())
@@ -1382,7 +1312,7 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
             result.append(token_yaku_dict[tokens.chiniisoo].copy())
     
     # 天地和
-    if param.is_tsumo and param.agari_junme == 1:
+    if param.agari_type == 'tsumo' and param.agari_junme == 0:
         # 天和
         if param.menfon == support.fonwei_tuple[0]:
             result.append(token_yaku_dict[tokens.tenhou].copy())

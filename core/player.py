@@ -23,9 +23,8 @@ class Player:
         self.tsumo_pai: Pai | None = None
         self.ron_temp_pai: Pai | None = None
 
-        self.is_riichi: bool = False
-        self.riichi_junme: bool | None = None
-        self.player_junme: int = 0 # plus 1 if 自家摸牌、鳴牌 or 任一人吃、碰、槓、拔北
+        self.riichi_junme: bool | None = None # 打出立直牌後的巡目
+        self.player_junme: int = 0
 
         self.doujin_furiten_pais: list[Pai] = []
         self.riichi_furiten_pais: list[Pai] = []
