@@ -307,10 +307,10 @@ class AgariComb:
     # 不考慮摸到哪張牌，拆分後的胡牌手牌 # 可為 2 5 8 11 14 張牌
     # 會將紅寶牌替換成普通牌，並記錄在 self.akadora_list 裡面
     def __init__(self, 
+                 hoora_type: int, 
                  mentsu_list: list[Mentsu] | None = None, 
                  toitsu_list: list[Toitsu] | None = None, 
                  tanhai_list: list[Pai] | None = None, 
-                 hoora_type: int | None = None, 
                  akadora_list: list[Pai] | None = None): 
         if mentsu_list is None:
             mentsu_list = []
@@ -318,10 +318,10 @@ class AgariComb:
             toitsu_list = []
         if tanhai_list is None:
             tanhai_list = []
-        self.mentsu_list = mentsu_list
-        self.toitsu_list = toitsu_list # len = 1 if not being chiitoitsu and koyaku
-        self.tanhai_list = tanhai_list # only for kokushi if not including koyaku
-        self.hoora_type = hoora_type # such as token.chiitoitsu_agari_type
+        self.hoora_type: int = hoora_type # such as token.chiitoitsu_agari_type
+        self.mentsu_list: list[Mentsu] = mentsu_list
+        self.toitsu_list: list[Toitsu] = toitsu_list # len = 1 if not being chiitoitsu and koyaku
+        self.tanhai_list: list[Pai] = tanhai_list # only for kokushi if not including koyaku
         
         self.akadora_list: list[Pai]
         if akadora_list is None:
@@ -595,14 +595,14 @@ def get_agari_comb_list(pai_list: list[Pai]) -> list[AgariComb]:
     if len(double) == 0:
         return result # 暫無無對子之胡牌型
     if len(double) == 7:
-        comb = AgariComb(toitsu_list=[Toitsu(p) for p in double], hoora_type=tokens.chiitoitsu_agari_type, akadora_list=akadora_list)
+        comb = AgariComb(tokens.chiitoitsu_agari_type, toitsu_list=[Toitsu(p) for p in double], akadora_list=akadora_list)
         result.append(comb)
 
     # 國士無雙型
     if all(p in all_pai for p in yaochuu_list):
         yaochuu_list_copy = yaochuu_list.copy()
         yaochuu_list_copy.remove(double[0])
-        comb = AgariComb(toitsu_list=[Toitsu(double[0])], tanhai_list=yaochuu_list_copy, hoora_type=tokens.kokushimusou_agari_type, akadora_list=akadora_list)
+        comb = AgariComb(tokens.kokushimusou_agari_type, toitsu_list=[Toitsu(double[0])], tanhai_list=yaochuu_list_copy, akadora_list=akadora_list)
         result.append(comb)
         return result # no other possible type
 
@@ -613,14 +613,14 @@ def get_agari_comb_list(pai_list: list[Pai]) -> list[AgariComb]:
         a1.remove(x)
         a1.remove(x)
         if len(a1) == 0:
-            comb = AgariComb([], [Toitsu(pai_list=[x.copy(), x.copy()])], [], tokens.normal_agari_type, akadora_list)
+            comb = AgariComb(tokens.normal_agari_type, [], [Toitsu(pai_list=[x.copy(), x.copy()])], [], akadora_list)
             result.append(comb)
             break
         mentsu_list = create_mentsu_list(a1)
         if mentsu_list is None:
             mentsu_list = []
         for l in mentsu_list:
-            comb = AgariComb(l, [Toitsu(pai_list=[x.copy(), x.copy()])], [], hoora_type=tokens.normal_agari_type, akadora_list=akadora_list)
+            comb = AgariComb(tokens.normal_agari_type, l, [Toitsu(pai_list=[x.copy(), x.copy()])], [], akadora_list=akadora_list)
             result.append(comb)
         # 重製
         a1 = all_pai.copy()
