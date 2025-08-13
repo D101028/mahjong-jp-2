@@ -4,7 +4,7 @@
 「junme」計數：玩家初始 junme 為 0，每打出一張牌會 +1。
 """
 
-from typing import overload, Literal, Iterable
+from typing import Literal, Iterable
 
 from core.ext import support, yaku, tokens
 from core.ext.index import *
@@ -15,6 +15,11 @@ class Pai:
     def __init__(self, name: str | None):
         if not isinstance(name, str | None):
             raise TypeError(f"Pai() argument must be a string or None, not '{type(name).__name__}'")
+        self.name: str | None
+        self.number: int | None
+        self.type: str | None
+        self.is_akadora: bool | None
+        self.usual_name: str | None
         if name is None:
             # null type
             self.name, self.number, self.type, self.is_akadora, self.usual_name = None, None, None, None, None
@@ -34,19 +39,22 @@ class Pai:
             self.is_akadora = (name[0] == "0")
             self.usual_name = str(self.number) + self.type
     
+    def __hash__(self) -> int:
+        return hash(self.usual_name)
+
     def __eq__(self, other):
         if not isinstance(other, Pai | str):
             raise ValueError(f"Undefined operator __eq__ for Pai and {type(other).__name__}")
         if isinstance(other, str):
             other = Pai(other)
         if other.type is None or self.type is None:
-            return False
+            return other.type is None and self.type is None
         return other.type == self.type and other.number == self.number
     
     def __str__(self):
         return f"<Pai {self.name}>"
 
-    def equal(self, other, is_strict: bool = True):
+    def equal(self, other, is_strict: bool = True) -> bool:
         if not isinstance(other, Pai | str):
             raise TypeError(f"other must be a Pai or str, not {type(other).__name__}")
         if isinstance(other, str):
@@ -70,7 +78,7 @@ class Pai:
         else:
             return support.paitype_sign_number_dict[self.type]*10 + int(self.name[0])
 
-    def next(self, allow_mod = False):
+    def next(self, allow_mod = False) -> 'Pai':
         if self.number is None or self.type is None or self.name is None:
             return Pai(None)
         if self.type == support.token_paitype_dict[tokens.zuu]:
@@ -82,7 +90,7 @@ class Pai:
                 return Pai(None) 
             return Pai(str((self.number + 1) % 10) + self.type)
     
-    def previous(self, allow_mod = False):
+    def previous(self, allow_mod = False) -> 'Pai':
         if not isinstance(self.number, int):
             raise TypeError(f"cannot get previous with self.type: {type(self.number).__name__}")
         if not isinstance(self.type, str):
@@ -100,9 +108,21 @@ class Pai:
                 return Pai(None)
             return Pai(str((self.number - 1) % 10) + self.type)
 
-    def copy(self):
+    def copy(self) -> 'Pai':
         new_pai = Pai(self.name)
         return new_pai
+
+    def normalize(self) -> None:
+        """去除紅寶牌資訊"""
+        self.name = self.usual_name
+        self.is_akadora = False
+
+    def to_akadora(self) -> None:
+        """轉換成紅寶牌"""
+        if self.type is None or self.number != 5:
+            raise Exception("Could not change this pai to akadora")
+        self.name = f"0{self.type}"
+        self.is_akadora = True
 
     @staticmethod
     def strict_remove(pai_list: list['Pai'], pai):
@@ -233,9 +253,8 @@ class Minkan:
     
     def to_mentsu(self):
         """會丟失紅寶牌等細節資訊"""
-        p = self.pai_tuple[0]
-        if p.is_akadora:
-            p = Pai(p.usual_name)
+        p = self.pai_tuple[0].copy()
+        p.normalize()
         return Mentsu(tokens.koutsu, [p, p.copy(), p.copy()])
 
 class Kakan:
@@ -248,9 +267,8 @@ class Kakan:
     
     def to_mentsu(self):
         """會丟失紅寶牌等細節資訊"""
-        p = self.pai_tuple[0]
-        if p.is_akadora:
-            p = Pai(p.usual_name)
+        p = self.pai_tuple[0].copy()
+        p.normalize()
         return Mentsu(tokens.koutsu, [p, p.copy(), p.copy()])
 
 class Ankan:
@@ -262,9 +280,8 @@ class Ankan:
     
     def to_mentsu(self):
         """會丟失紅寶牌等細節資訊"""
-        p = self.pai_tuple[0]
-        if p.is_akadora:
-            p = Pai(p.usual_name)
+        p = self.pai_tuple[0].copy()
+        p.normalize()
         return Mentsu(tokens.koutsu, [p, p.copy(), p.copy()])
 
 FuroType = BasicFuro | Minkan | Kakan | Ankan
@@ -313,16 +330,16 @@ class AgariComb:
             for p in m.pai_list:
                 if p.is_akadora:
                     self.akadora_list.append(p.copy())
-                    p.is_akadora = False
+                    p.normalize()
         for t in self.toitsu_list:
             for p in t.pai_list:
                 if p.is_akadora:
                     self.akadora_list.append(p.copy())
-                    p.is_akadora = False
+                    p.normalize()
         for p in self.tanhai_list:
             if p.is_akadora:
                 self.akadora_list.append(p.copy())
-                p.is_akadora = False
+                p.normalize()
 
 class TehaiComb:
     # 拆分後的面搭胡牌組合 # 包含所有手牌
@@ -388,30 +405,26 @@ class TehaiComb:
             for p in m.pai_list:
                 if p in list_copy:
                     list_copy.remove(p)
-                    p.is_akadora = True
-                    p.name = "0" + p.name[1] # type: ignore
+                    p.to_akadora()
             if len(list_copy) == 0:
                 return
         for t in self.toitsu_list:
             for p in t.pai_list:
                 if p in list_copy:
                     list_copy.remove(p)
-                    p.is_akadora = True
-                    p.name = "0" + p.name[1] # type: ignore
+                    p.to_akadora()
             if len(list_copy) == 0:
                 return
         for p in self.waiting_comb:
             if p in list_copy:
                 list_copy.remove(p)
-                p.is_akadora = True
-                p.name = "0" + p.name[1] # type: ignore
+                p.to_akadora()
         if len(list_copy) == 0:
             return 
         for p in self.tanhai_list:
             if p in list_copy:
                 list_copy.remove(p)
-                p.is_akadora = True
-                p.name = "0" + p.name[1] # type: ignore
+                p.to_akadora()
         
     def all_pais(self) -> list[Pai]:
         output = []
@@ -559,7 +572,7 @@ def get_agari_comb_list(pai_list: list[Pai]) -> list[AgariComb]:
     for p in all_pai:
         if p.is_akadora:
             akadora_list.append(p.copy())
-            p.is_akadora = False
+            p.normalize()
 
     # 七對子型
     double: list[Pai]
