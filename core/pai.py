@@ -605,6 +605,8 @@ def get_tenpai_list(pai_list: list[Pai]) -> list[Pai]:
     result = []
     for i in INDEX_WITHOUT_AKADORA:
         p = Pai(i)
+        if pai_list.count(p) == 4: # 已有四張者不計入聽牌
+            continue
         if is_agari(pai_list + [p]):
             result.append(p)
     return result
@@ -691,58 +693,70 @@ class Tehai:
                             mentsu_list_copy = [m0.copy() for m0 in mentsu_list]
                             mentsu_list_copy.remove(m)
                             if m.type == tokens.koutsu: # 雙碰
-                                tehai_comb_list.append(TehaiComb(tokens.soohoomachi, 
-                                                                 p.copy(), 
-                                                                 [p.copy(), p.copy()], 
-                                                                 [p0.copy() for p0 in agari_comb.toitsu_list], 
-                                                                 mentsu_list_copy, 
-                                                                 furo_list, 
-                                                                 akadora_revise_list=agari_comb.akadora_list))
+                                tehai_comb_list.append(TehaiComb(
+                                    tokens.soohoomachi, 
+                                    p.copy(), 
+                                    [p.copy(), p.copy()], 
+                                    [p0.copy() for p0 in agari_comb.toitsu_list], 
+                                    mentsu_list_copy, 
+                                    furo_list, 
+                                    akadora_revise_list=agari_comb.akadora_list
+                                ))
                             elif m.type == tokens.shuntsu: # 邊張、崁張、兩面
                                 sorted_list = sorted(m.pai_list, key=lambda pai: pai.int_sign())
                                 pos = sorted_list.index(p)
                                 if pos == 0:
                                     if sorted_list[-1].number == 9: # 右半邊張
-                                        tehai_comb_list.append(TehaiComb(tokens.henchoomachi, 
-                                                                         sorted_list[0], 
-                                                                         sorted_list[1:], 
-                                                                         [p0.copy() for p0 in agari_comb.toitsu_list], 
-                                                                         mentsu_list_copy, 
-                                                                         furo_list, 
-                                                                         akadora_revise_list=agari_comb.akadora_list))
+                                        tehai_comb_list.append(TehaiComb(
+                                            tokens.henchoomachi, 
+                                            sorted_list[0], 
+                                            sorted_list[1:], 
+                                            [p0.copy() for p0 in agari_comb.toitsu_list], 
+                                            mentsu_list_copy, 
+                                            furo_list, 
+                                            akadora_revise_list=agari_comb.akadora_list
+                                        ))
                                     else: # 兩面
-                                        tehai_comb_list.append(TehaiComb(tokens.ryanmenmachi, 
-                                                  sorted_list[0], 
-                                                  sorted_list[1:], 
-                                                  [p0.copy() for p0 in agari_comb.toitsu_list], 
-                                                  mentsu_list_copy, 
-                                                  furo_list, 
-                                                  akadora_revise_list=agari_comb.akadora_list))
+                                        tehai_comb_list.append(TehaiComb(
+                                            tokens.ryanmenmachi, 
+                                            sorted_list[0], 
+                                            sorted_list[1:], 
+                                            [p0.copy() for p0 in agari_comb.toitsu_list], 
+                                            mentsu_list_copy, 
+                                            furo_list, 
+                                            akadora_revise_list=agari_comb.akadora_list
+                                        ))
                                 elif pos == 1: # 崁張
-                                    tehai_comb_list.append(TehaiComb(tokens.kanchoomachi, 
-                                              sorted_list[1], 
-                                              [sorted_list[0], sorted_list[2]], 
-                                              [p0.copy() for p0 in agari_comb.toitsu_list], 
-                                              mentsu_list_copy, 
-                                              furo_list, 
-                                              akadora_revise_list=agari_comb.akadora_list))
+                                    tehai_comb_list.append(TehaiComb(
+                                        tokens.kanchoomachi, 
+                                        sorted_list[1], 
+                                        [sorted_list[0], sorted_list[2]], 
+                                        [p0.copy() for p0 in agari_comb.toitsu_list], 
+                                        mentsu_list_copy, 
+                                        furo_list, 
+                                        akadora_revise_list=agari_comb.akadora_list
+                                    ))
                                 elif pos == 2: 
                                     if sorted_list[0].number == 1: # 左半邊張
-                                        tehai_comb_list.append(TehaiComb(tokens.henchoomachi, 
-                                                  sorted_list[2], 
-                                                  sorted_list[:2], 
-                                                  [p0.copy() for p0 in agari_comb.toitsu_list], 
-                                                  mentsu_list_copy, 
-                                                  furo_list, 
-                                                  akadora_revise_list=agari_comb.akadora_list))
+                                        tehai_comb_list.append(TehaiComb(
+                                            tokens.henchoomachi, 
+                                            sorted_list[2], 
+                                            sorted_list[:2], 
+                                            [p0.copy() for p0 in agari_comb.toitsu_list], 
+                                            mentsu_list_copy, 
+                                            furo_list, 
+                                            akadora_revise_list=agari_comb.akadora_list
+                                        ))
                                     else: # 兩面
-                                        tehai_comb_list.append(TehaiComb(tokens.ryanmenmachi, 
-                                                  sorted_list[2], 
-                                                  sorted_list[:2], 
-                                                  [p0.copy() for p0 in agari_comb.toitsu_list], 
-                                                  mentsu_list_copy, 
-                                                  furo_list, 
-                                                  akadora_revise_list=agari_comb.akadora_list))
+                                        tehai_comb_list.append(TehaiComb(
+                                            tokens.ryanmenmachi, 
+                                            sorted_list[2], 
+                                            sorted_list[:2], 
+                                            [p0.copy() for p0 in agari_comb.toitsu_list], 
+                                            mentsu_list_copy, 
+                                            furo_list, 
+                                            akadora_revise_list=agari_comb.akadora_list
+                                        ))
                         dealed_mentsu_list.append(m)
                 elif agari_comb.hoora_type == tokens.special_koyaku_agari_type: # 特殊古役型
                     pass 
