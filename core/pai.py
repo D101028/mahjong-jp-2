@@ -42,7 +42,7 @@ class Pai:
 
     def __eq__(self, other):
         if not isinstance(other, Pai | str):
-            raise ValueError(f"Undefined operator __eq__ for Pai and {type(other).__name__}")
+            return False
         if isinstance(other, str):
             other = Pai(other)
         return other.type == self.type and other.number == self.number
