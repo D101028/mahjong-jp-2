@@ -3,16 +3,36 @@ from core.ext import tokens
 ######################### 役種相關 ##############################
 class Yaku():
     def __init__(self, yakutoken: int, 
-                 hansuu: int, 
-                 is_furo_minus: bool = False, 
-                 is_menchin_only: bool = False, 
-                 is_yakuman: bool = False) -> None: 
-        self.yakutoken = yakutoken
-        self.ori_hansuu = hansuu 
-        self.is_furo_minus = is_furo_minus
-        self.is_menchin_only = is_menchin_only
-        self.is_yakuman = is_yakuman
-    
+                    hansuu: int, 
+                    is_furo_minus: bool = False, 
+                    is_menchin_only: bool = False, 
+                    is_yakuman: bool = False) -> None: 
+        self._yakutoken = yakutoken
+        self._ori_hansuu = hansuu
+        self._is_furo_minus = is_furo_minus
+        self._is_menchin_only = is_menchin_only
+        self._is_yakuman = is_yakuman
+
+    @property
+    def yakutoken(self):
+        return self._yakutoken
+
+    @property
+    def ori_hansuu(self):
+        return self._ori_hansuu
+
+    @property
+    def is_furo_minus(self):
+        return self._is_furo_minus
+
+    @property
+    def is_menchin_only(self):
+        return self._is_menchin_only
+
+    @property
+    def is_yakuman(self):
+        return self._is_yakuman
+
     def __eq__(self, other) -> bool:
         if not isinstance(other, Yaku):
             return False
@@ -21,8 +41,8 @@ class Yaku():
     def __str__(self) -> str:
         return str(tokens.to_lang(self.yakutoken))
 
-    def copy(self) -> 'Yaku':
-        return Yaku(self.yakutoken, self.ori_hansuu, self.is_furo_minus, self.is_menchin_only, self.is_yakuman)
+    def __hash__(self) -> int:
+        return self._yakutoken.__hash__()
 
 # 役種名稱不可重複
 # 通常役
