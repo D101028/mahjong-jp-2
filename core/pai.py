@@ -40,14 +40,14 @@ class Pai:
     def __hash__(self) -> int:
         return hash(self.usual_name)
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if not isinstance(other, Pai | str):
             return False
         if isinstance(other, str):
             other = Pai(other)
         return other.type == self.type and other.number == self.number
     
-    def __str__(self):
+    def __str__(self) -> str:
         return f"<Pai {self.name}>"
 
     def equal(self, other: Union['Pai', str], is_strict: bool = True) -> bool:
@@ -165,7 +165,7 @@ chinroutoupai_list = [Pai(p) for p in support.chinroutoupai_paitype_tuple]
 sanyuanpai_list = [Pai(p) for p in support.sanyuanpai_paitype_tuple]
 suushiipai_list = [Pai(p) for p in support.suushiipai_paitype_tuple]
 
-def create_pai_list(name_list: Iterable[str] | str):
+def create_pai_list(name_list: Iterable[str] | str) -> list[Pai]:
     if (not isinstance(name_list, Iterable) and not isinstance(name_list, str)) or \
         (isinstance(name_list, Iterable) and not isinstance(name_list, str) and not all(isinstance(_, str) for _ in name_list)):
         raise TypeError(f"name_list should be Iterable[str] or a str, not '{type(name_list).__name__}'")
@@ -183,22 +183,22 @@ def create_pai_list(name_list: Iterable[str] | str):
     return pai_list
 
 class Mentsu:
-    def __init__(self, type_: int, pai_list: list[Pai]):
+    def __init__(self, type_: int, pai_list: list[Pai]) -> None:
         if type_ not in (tokens.koutsu, tokens.shuntsu):
             raise ValueError(f"Unknown type {type_} for Mentsu")
         self.type = type_ # tokens.koutsu, tokens.shuntsu, (tokens.ankan, tokens.kakan, tokens.minkan only appear in furo)
         self.pai_list = pai_list
     
-    def __str__(self):
+    def __str__(self) -> str:
         output = "(" + " ".join([str(p.name) for p in self.pai_list]) + ")"
         return f"<Mentsu {output}>"
     
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if not isinstance(other, Mentsu):
             return False
         return self.type == other.type and sorted(self.pai_list, key=lambda p: p.int_sign())[0] == sorted(other.pai_list, key=lambda p: p.int_sign())[0]
     
-    def copy(self):
+    def copy(self) -> 'Mentsu':
         return Mentsu(self.type, [p.copy() for p in self.pai_list])
 
 def get_mentsu(pai_list: list[Pai]) -> Mentsu:
@@ -210,7 +210,7 @@ def get_mentsu(pai_list: list[Pai]) -> Mentsu:
         return Mentsu(tokens.koutsu, pai_list)
 
 class Toitsu:
-    def __init__(self, pai: Pai | None = None, pai_list: list[Pai] | None = None):
+    def __init__(self, pai: Pai | None = None, pai_list: list[Pai] | None = None) -> None:
         self.pai_list: list[Pai]
         if pai is None:
             if pai_list is None:
@@ -220,16 +220,16 @@ class Toitsu:
         else:
             self.pai_list = [pai, pai.copy()]
     
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if not isinstance(other, Toitsu):
             return False
         return self.pai_list[0] == other.pai_list[0]
 
-    def __str__(self):
+    def __str__(self) -> str:
         output = "(" + " ".join([str(p.name) for p in self.pai_list]) + ")"
         return f"<Toitsu {output}>"
 
-    def copy(self):
+    def copy(self) -> 'Toitsu':
         return Toitsu(pai_list=[p.copy() for p in self.pai_list])
 
 class BasicFuro:
@@ -255,10 +255,10 @@ class BasicFuro:
 
         self.pai_tuple = (*self_pai_tuple, received_pai)
     
-    def to_mentsu(self):
+    def to_mentsu(self) -> Mentsu:
         return Mentsu(self.type, [p.copy() for p in self.pai_tuple])
     
-    def __str__(self):
+    def __str__(self) -> str:
         output = "(" + " ".join([p.__str__() for p in self.pai_tuple]) + ")"
         return f"<Furo {output}>"
 
@@ -271,7 +271,7 @@ class Minkan:
 
         self.pai_tuple = (*self.self_pai_tuple, received_pai)
     
-    def to_mentsu(self):
+    def to_mentsu(self) -> Mentsu:
         """會丟失紅寶牌等細節資訊"""
         p = self.pai_tuple[0].get_normal()
         return Mentsu(tokens.koutsu, [p, p.copy(), p.copy()])
@@ -284,7 +284,7 @@ class Kakan:
 
         self.pai_tuple = (*koutsu_furo.pai_tuple, received_pai)
     
-    def to_mentsu(self):
+    def to_mentsu(self) -> Mentsu:
         """會丟失紅寶牌等細節資訊"""
         p = self.pai_tuple[0].get_normal()
         return Mentsu(tokens.koutsu, [p, p.copy(), p.copy()])
@@ -296,7 +296,7 @@ class Ankan:
 
         self.pai_tuple = self_pai_tuple
     
-    def to_mentsu(self):
+    def to_mentsu(self) -> Mentsu:
         """會丟失紅寶牌等細節資訊"""
         p = self.pai_tuple[0].get_normal()
         return Mentsu(tokens.koutsu, [p, p.copy(), p.copy()])
@@ -311,7 +311,7 @@ class AgariComb:
                  mentsu_list: list[Mentsu] | None = None, 
                  toitsu_list: list[Toitsu] | None = None, 
                  tanhai_list: list[Pai] | None = None, 
-                 akadora_list: list[Pai] | None = None): 
+                 akadora_list: list[Pai] | None = None) -> None: 
         if mentsu_list is None:
             mentsu_list = []
         if toitsu_list is None:
@@ -330,7 +330,7 @@ class AgariComb:
         else:
             self.akadora_list = akadora_list
     
-    def __str__(self):
+    def __str__(self) -> str:
         output = ""
         output += f"{tokens.to_lang(self.hoora_type)}: "
         for t in self.toitsu_list:
@@ -342,7 +342,7 @@ class AgariComb:
         output += "(" + ",".join([str(p.name) for p in self.tanhai_list]) + ")"
         return output
 
-    def extract_akadora(self):
+    def extract_akadora(self) -> None:
         for m in self.mentsu_list:
             for p in m.pai_list:
                 if p.is_akadora:
@@ -368,7 +368,7 @@ class TehaiComb:
                  mentsu_list: list[Mentsu] | None = None, 
                  furo_list: list[FuroType] | None = None, 
                  tanhai_list: list[Pai] | None = None, 
-                 akadora_revise_list: list[Pai] | None = None):
+                 akadora_revise_list: list[Pai] | None = None) -> None:
         if waiting_comb is None:
             waiting_comb = []
         if toitsu_list is None:
@@ -398,7 +398,7 @@ class TehaiComb:
             # 將紅寶牌替換回去
             self.revise_akadora(akadora_revise_list)
     
-    def __str__(self):
+    def __str__(self) -> str:
         output = ""
         output += f"{tokens.to_lang(self.tenpai_type)}："
         for t in self.toitsu_list:
@@ -416,7 +416,7 @@ class TehaiComb:
         output += f"；聽：{self.tenpai.name}"
         return output
 
-    def revise_akadora(self, revise_list: list[Pai]):
+    def revise_akadora(self, revise_list: list[Pai]) -> None:
         list_copy = revise_list.copy()
         for m in self.mentsu_list:
             for p in m.pai_list:
@@ -456,7 +456,7 @@ class TehaiComb:
         output.append(self.tenpai)
         return output
 
-def is_agari(pai_list: list[Pai]):
+def is_agari(pai_list: list[Pai]) -> bool:
     """檢查胡牌型 可傳入 2 5 8 11 14 張"""
     
     all_pai = pai_list.copy()
@@ -522,10 +522,10 @@ def is_agari(pai_list: list[Pai]):
 
     return False
 
-def create_mentsu_list(pai_list: list[Pai], first_koutsu_deny: bool = False)  -> list[list[Mentsu]] | None:
+def create_mentsu_list(pai_list: list[Pai], first_koutsu_deny: bool = False)  -> list[list[Mentsu]]:
     """分割去除對子之胡牌組合 可傳入 0 3 6 9 12 張，input 必須已排序"""
     if len(pai_list) == 0:
-        return 
+        return []
     all_pai = [pai.copy() for pai in pai_list]
     result = []
     if all_pai.count(all_pai[0]) < 3:
@@ -537,7 +537,7 @@ def create_mentsu_list(pai_list: list[Pai], first_koutsu_deny: bool = False)  ->
             all_pai.remove(pp)
             all_pai.remove(ppp)
             ll = create_mentsu_list(all_pai)
-            result += [[mentsu] + l for l in ll] if not ll is None else [[mentsu]]
+            result += [[mentsu] + l for l in ll] if len(ll) != 0 else [[mentsu]]
     else:
         if not first_koutsu_deny:
             # 先拔刻子
@@ -547,7 +547,7 @@ def create_mentsu_list(pai_list: list[Pai], first_koutsu_deny: bool = False)  ->
             del all_pai[0]
             del all_pai[0]
             ll = create_mentsu_list(all_pai)
-            result += [[mentsu] + l for l in ll] if not ll is None else [[mentsu]]
+            result += [[mentsu] + l for l in ll] if len(ll) != 0 else [[mentsu]]
 
             # 再拔順子
             all_pai = [pai.copy() for pai in pai_list]
@@ -558,7 +558,7 @@ def create_mentsu_list(pai_list: list[Pai], first_koutsu_deny: bool = False)  ->
                 all_pai.remove(pp)
                 all_pai.remove(ppp)
                 ll = create_mentsu_list(all_pai, True) # 遞迴的第一張不能當刻子(前面拔過了，會撞)
-                result += [[mentsu] + l for l in ll] if not ll is None else [[mentsu]]
+                result += [[mentsu] + l for l in ll] if len(ll) != 0 else [[mentsu]]
         else:
             # 第一張不能當刻子
             # 拔順子
@@ -569,7 +569,7 @@ def create_mentsu_list(pai_list: list[Pai], first_koutsu_deny: bool = False)  ->
                 all_pai.remove(pp)
                 all_pai.remove(ppp)
                 ll = create_mentsu_list(all_pai, True) # (True or False 都沒差了)(如果同種牌只有四張)
-                result += [[mentsu] + l for l in ll] if not ll is None else [[mentsu]]
+                result += [[mentsu] + l for l in ll] if len(ll) != 0 else [[mentsu]]
     return result
 
 def get_agari_comb_list(pai_list: list[Pai]) -> list[AgariComb]:
@@ -617,8 +617,6 @@ def get_agari_comb_list(pai_list: list[Pai]) -> list[AgariComb]:
             result.append(comb)
             break
         mentsu_list = create_mentsu_list(a1)
-        if mentsu_list is None:
-            mentsu_list = []
         for l in mentsu_list:
             comb = AgariComb(tokens.normal_agari_type, l, [Toitsu(pai_list=[x.copy(), x.copy()])], [], akadora_list=akadora_list)
             result.append(comb)
@@ -643,7 +641,7 @@ def get_tenpai_list(pai_list: list[Pai]) -> list[Pai]:
     return result
 
 class Tehai:
-    def __init__(self, pai_list: list[Pai] | list[str]):
+    def __init__(self, pai_list: list[Pai] | list[str]) -> None:
         if not isinstance(pai_list, list):
             raise TypeError(f"pai_list must be a list or str, not {type(pai_list).__name__}")
         pai_list = [Pai(p) if isinstance(p, str) else p.copy() for p in pai_list]
@@ -658,7 +656,7 @@ class Tehai:
         output += " ".join([f.__str__() for f in self.furo_list])
         return output
 
-    def sort(self):
+    def sort(self) -> None:
         self.pai_list.sort(key = lambda p: p.int_sign())
     
     def get_tenpais(self) -> list[Pai]:
