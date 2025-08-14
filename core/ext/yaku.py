@@ -6,22 +6,22 @@ class Yaku():
                  hansuu: int, 
                  is_furo_minus: bool = False, 
                  is_menchin_only: bool = False, 
-                 is_yakuman: bool = False): 
+                 is_yakuman: bool = False) -> None: 
         self.yakutoken = yakutoken
         self.ori_hansuu = hansuu 
         self.is_furo_minus = is_furo_minus
         self.is_menchin_only = is_menchin_only
         self.is_yakuman = is_yakuman
     
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if not isinstance(other, Yaku):
             return False
         return other.yakutoken == self.yakutoken
 
-    def __str__(self):
-        return self.yakutoken
+    def __str__(self) -> str:
+        return str(tokens.to_lang(self.yakutoken))
 
-    def copy(self):
+    def copy(self) -> 'Yaku':
         return Yaku(self.yakutoken, self.ori_hansuu, self.is_furo_minus, self.is_menchin_only, self.is_yakuman)
 
 # 役種名稱不可重複
