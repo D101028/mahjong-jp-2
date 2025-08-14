@@ -1,5 +1,5 @@
 {
-  "core": {
+  "core.pai": {
     "ton": "東",
     "nan": "南",
     "shaa": "西",
@@ -121,5 +121,8 @@
     "sanshokudookan": "三色同槓",
     "suuankan": "四暗槓",
     "paarenchan": "八連莊"
+  }, 
+  "core.game": {
+
   }
 }

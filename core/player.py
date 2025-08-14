@@ -39,6 +39,7 @@ class Player:
             return self.ID == other.ID
 
     def previous(self) -> 'Player':
+        """上家"""
         player: Player | None
         if players_dict.get(support.fonwei_tuple[-1]) is None:
             # Sanin
@@ -57,6 +58,7 @@ class Player:
         return player
 
     def next(self) -> 'Player':
+        """下家"""
         player: Player | None
         if players_dict.get(support.fonwei_tuple[-1]) is None:
             # Sanin

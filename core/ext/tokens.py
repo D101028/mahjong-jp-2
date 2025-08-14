@@ -10,7 +10,7 @@ def to_lang(token: int | None) -> str | None:
     module_locals = dict(inspect.getmembers(current_module))
     for key, value in module_locals.items():
         if value == token:
-            return Config.lang["core"].get(key)
+            return Config.lang["core.pai"].get(key)
     else:
         return None
 
