@@ -7,30 +7,30 @@ class Yaku():
                     is_furo_minus: bool = False, 
                     is_menchin_only: bool = False, 
                     is_yakuman: bool = False) -> None: 
-        self._yakutoken = yakutoken
-        self._ori_hansuu = hansuu
-        self._is_furo_minus = is_furo_minus
-        self._is_menchin_only = is_menchin_only
-        self._is_yakuman = is_yakuman
+        self._yakutoken: int = yakutoken
+        self._ori_hansuu: int = hansuu
+        self._is_furo_minus: bool = is_furo_minus
+        self._is_menchin_only: bool = is_menchin_only
+        self._is_yakuman: bool = is_yakuman
 
     @property
-    def yakutoken(self):
+    def yakutoken(self) -> int:
         return self._yakutoken
 
     @property
-    def ori_hansuu(self):
+    def ori_hansuu(self) -> int:
         return self._ori_hansuu
 
     @property
-    def is_furo_minus(self):
+    def is_furo_minus(self) -> bool:
         return self._is_furo_minus
 
     @property
-    def is_menchin_only(self):
+    def is_menchin_only(self) -> bool:
         return self._is_menchin_only
 
     @property
-    def is_yakuman(self):
+    def is_yakuman(self) -> bool:
         return self._is_yakuman
 
     def __eq__(self, other) -> bool:
