@@ -46,7 +46,7 @@ class Yaku():
 
 # 役種名稱不可重複
 # 通常役
-ichihan_yaku_list = [
+ichihan_yaku_list: list[int] = [
     tokens.riichi,
     tokens.ippatsu,
     tokens.tsumo,
@@ -69,7 +69,7 @@ ichihan_yaku_list = [
     tokens.iipeekoo,
     tokens.rinshankaihou
 ]
-nihan_yaku_list = [
+nihan_yaku_list: list[int] = [
     tokens.dabururiichi,
     tokens.chiitoitsu,
     tokens.sanshokudoujun,
@@ -82,15 +82,15 @@ nihan_yaku_list = [
     tokens.sankantsu,
     tokens.shousangen
 ]
-sanhan_yaku_list = [
+sanhan_yaku_list: list[int] = [
     tokens.honiisoo,
     tokens.junchantaiyaochuu,
     tokens.ryanpeekoo
 ]
-rokuhan_yaku_list = [
+rokuhan_yaku_list: list[int] = [
     tokens.chiniisoo
 ]
-yakuman_yaku_list = [
+yakuman_yaku_list: list[int] = [
     tokens.tenhou,
     tokens.chiihou,
     tokens.kokushimusou,
@@ -103,13 +103,13 @@ yakuman_yaku_list = [
     tokens.chuurenpouton,
     tokens.suukantsu
 ]
-daburu_yakuman_yaku_list = [
+daburu_yakuman_yaku_list: list[int] = [
     tokens.kokushimusoujuusanmen,
     tokens.suuankootanki,
     tokens.junseichuurenpouton,
     tokens.daisuushii
 ]
-mechin_only_yaku_list = [
+mechin_only_yaku_list: list[int] = [
     tokens.riichi,
     tokens.tsumo,
     tokens.pinfu,
@@ -122,7 +122,7 @@ mechin_only_yaku_list = [
     tokens.chuurenpouton,
     tokens.chiihou,
 ]
-furo_minus_yaku_list = [
+furo_minus_yaku_list: list[int] = [
     tokens.sanshokudoujun,
     tokens.ikkitsuukan,
     tokens.honchantaiyaochuu,
@@ -132,13 +132,13 @@ furo_minus_yaku_list = [
 ]
 
 # 古役
-ichihan_koyaku_list = [
+ichihan_koyaku_list: list[int] = [
     tokens.tsubamegaeshi, 
     tokens.kanfuri, 
     tokens.shiiaruraotai, 
     tokens.shousanfon
 ]
-nihan_koyaku_list = [
+nihan_koyaku_list: list[int] = [
     tokens.sanrenkoo, 
     tokens.sanfonkoo, 
     tokens.chaopaikoo, 
@@ -147,15 +147,15 @@ nihan_koyaku_list = [
     tokens.uumensai, 
     tokens.ryanankan
 ]
-sanhan_koyaku_list = [
+sanhan_koyaku_list: list[int] = [
     tokens.isshokusanjun, 
     tokens.tanhonhoo, 
     tokens.ryansuushun
 ]
-rokuhan_koyaku_list = [
+rokuhan_koyaku_list: list[int] = [
     tokens.chitanhonhoo
 ]
-yakuman_koyaku_list = [
+yakuman_koyaku_list: list[int] = [
     tokens.suurenkoo, 
     tokens.isshokuyonjun, 
     tokens.gozokukyouwa, 
@@ -173,7 +173,7 @@ yakuman_koyaku_list = [
     tokens.daichikurin, 
     tokens.sanshokudooankoo
 ]
-daburu_yakuman_koyaku_list = [
+daburu_yakuman_koyaku_list: list[int] = [
     tokens.junseisuurenkoo, 
     tokens.daichisei, 
     tokens.junseiheiiisoo, 
