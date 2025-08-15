@@ -6,6 +6,7 @@ from core.player import Player, players_dict
 from core.ext import support
 from core.ext.index import *
 from core.ext.rule import CommonRules, YoninRules, SanninRules
+from core.types import *
 
 class DoraHyouji:
     def __init__(self, hyouji_pai_list: list[Pai]) -> None:
@@ -120,3 +121,5 @@ class SanninYama(YamaChain):
             super().__init__(
                 PAI_INDEX_SANNIN_WITHOUT_AKADORA, support.sannin_rinshansuu, support.sannin_dora_hyoujisuu
             )
+
+YamaType = YoninYama | SanninYama

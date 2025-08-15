@@ -10,6 +10,7 @@ from core.ext import support, yaku, tokens
 from core.ext.index import *
 from core.ext.rule import BaseRules
 from core.ext.yaku import Yaku, token_yaku_dict
+from core.types import *
 
 class Pai:
     def __init__(self, name: str):
@@ -168,6 +169,11 @@ class Pai:
             raise Exception(f"Could not change the pai `{self}` to akadora")
         self._is_akadora = True
 
+    def to_dict(self) -> PaiDictType:
+        return {
+            "name": self.name
+        }
+
 yaochuu_list = [Pai(p) for p in support.yaochuu_paitype_tuple]
 ryuuiisoopai_list = [Pai(p) for p in support.ryuuiisoopai_paitype_tuple]
 chinroutoupai_list = [Pai(p) for p in support.chinroutoupai_paitype_tuple]
@@ -243,12 +249,6 @@ class Toitsu:
 
 class BasicFuro:
     """基本副露：吃、碰形成的副露"""
-    # @overload
-    # def __init__(self, type_: int, pai_tuple: tuple[Pai, ...], minpai_pai: Literal[None], from_player_id: Literal[None]) -> None:
-    #     ...
-    # @overload
-    # def __init__(self, type_: int, pai_tuple: tuple[Pai, ...], minpai_pai: Pai, from_player_id: int):
-    #     ...
 
     def __init__(self, 
                  type_: int, 
@@ -271,6 +271,15 @@ class BasicFuro:
         output = "(" + " ".join([p.__str__() for p in self.pai_tuple]) + ")"
         return f"<Furo {output}>"
 
+    def to_dict(self) -> FuroDictType:
+        return {
+            "type": self.type, 
+            "self-pai-tuple": tuple(pai.to_dict() for pai in self.self_pai_tuple), 
+            "received-pai": self.received_pai.to_dict(), 
+            "from_player_id": self.from_player_id, 
+            "self-koutsu-furo": None
+        }
+
 class Minkan:
     def __init__(self, self_pai_tuple: tuple[Pai, Pai, Pai], received_pai: Pai, from_player_id: int) -> None:
         self.type = tokens.minkan
@@ -285,6 +294,15 @@ class Minkan:
         p = self.pai_tuple[0].get_normal()
         return Mentsu(tokens.koutsu, [p, p.copy(), p.copy()])
 
+    def to_dict(self) -> FuroDictType:
+        return {
+            "type": self.type, 
+            "self-pai-tuple": tuple(pai.to_dict() for pai in self.self_pai_tuple), 
+            "received-pai": self.received_pai.to_dict(), 
+            "from_player_id": self.from_player_id, 
+            "self-koutsu-furo": None
+        }
+
 class Kakan:
     def __init__(self, koutsu_furo: BasicFuro, received_pai: Pai) -> None:
         self.type = tokens.kakan
@@ -298,6 +316,15 @@ class Kakan:
         p = self.pai_tuple[0].get_normal()
         return Mentsu(tokens.koutsu, [p, p.copy(), p.copy()])
 
+    def to_dict(self) -> FuroDictType:
+        return {
+            "type": self.type, 
+            "self-pai-tuple": None, 
+            "received-pai": self.received_pai.to_dict(), 
+            "from_player_id": None, 
+            "self-koutsu-furo": self.koutsu_furo.to_dict()
+        }
+    
 class Ankan:
     def __init__(self, self_pai_tuple: tuple[Pai, Pai, Pai, Pai]) -> None:
         self.type = tokens.ankan
@@ -310,7 +337,31 @@ class Ankan:
         p = self.pai_tuple[0].get_normal()
         return Mentsu(tokens.koutsu, [p, p.copy(), p.copy()])
 
+    def to_dict(self) -> FuroDictType:
+        return {
+            "type": self.type, 
+            "self-pai-tuple": tuple(pai.to_dict() for pai in self.self_pai_tuple), 
+            "received-pai": None, 
+            "from_player_id": None, 
+            "self-koutsu-furo": None
+        }
+    
 FuroType = BasicFuro | Minkan | Kakan | Ankan
+
+def get_kuikae_list(furo: FuroType) -> list[Pai]:
+    result: list[Pai] = []
+    if not isinstance(furo, BasicFuro):
+        return result
+    if furo.type == tokens.shuntsu:
+        result.append(furo.received_pai)
+        p1, p2 = sorted(furo.self_pai_tuple, key=lambda pai: pai.number)
+        if p2.number - p1.number == 1:
+            pre = p1.previous()
+            if pre is not None:
+                result.append(pre)
+    elif furo.type == tokens.koutsu:
+        result.append(furo.received_pai)
+    return result
 
 class AgariComb:
     # 不考慮摸到哪張牌，拆分後的胡牌手牌 # 可為 2 5 8 11 14 張牌
@@ -657,6 +708,8 @@ class Tehai:
         self.pai_list = pai_list  # len = 1 4 7 10 13
         self.furo_list: list[FuroType] = []
         self.penuki_list: list[Pai] = []
+
+        self.new_pai: Pai | None = None
     
     def __str__(self) -> str:
         output = ""
@@ -664,6 +717,14 @@ class Tehai:
         output += " | "
         output += " ".join([f.__str__() for f in self.furo_list])
         return output
+
+    def to_dict(self) -> TehaiDictType:
+        return {
+            "pai-list": [pai.to_dict() for pai in self.pai_list], 
+            "furo-list": [furo.to_dict() for furo in self.furo_list], 
+            "penuki-list": [pai.to_dict() for pai in self.penuki_list], 
+            "new-pai": self.new_pai.to_dict() if self.new_pai is not None else None
+        }
 
     def sort(self) -> None:
         self.pai_list.sort(key = lambda p: p.int_sign())
@@ -822,6 +883,10 @@ class Tehai:
             return True
         return False
 
+    def is_able_to_ron(self, pai: Pai, param: 'Param'):
+        agari_result_list = get_agari_result_list(self, pai, param)
+        return len(agari_result_list) != 0
+
 class Param:
     def __init__(self, 
                  riichi_junme: int | None, 
@@ -906,10 +971,11 @@ class AgariResult:
 def get_agari_result_list(tehai: Tehai, agari_pai: Pai, param: Param) -> list[AgariResult]:
     result: list[AgariResult] = []
     # get tehai comb list
-    if len(tehai.get_tehai_comb_list()) == 0: # no ten
-        raise RuntimeError("get_agari_result_list no ten error")
+    tehai_comb_list = tehai.get_tehai_comb_list()
+    if len(tehai_comb_list) == 0: # no ten
+        return result
     available_tehai_comb_list: list[TehaiComb] = []
-    for tc in tehai.get_tehai_comb_list():
+    for tc in tehai_comb_list:
         if tc.tenpai == agari_pai:
             available_tehai_comb_list.append(tc)
 
