@@ -27,15 +27,6 @@ class Intent:
         self, 
         response_type: Literal['no-response'], 
         purpose: Literal[
-            "river-update-notation", 
-        ], 
-        content: RiverUpdateNotationContentType) -> None:
-        ...
-    @overload
-    def __init__(
-        self, 
-        response_type: Literal['no-response'], 
-        purpose: Literal[
             "hyoujihai-update-notation"
         ], 
         content: dict[str, Any]) -> None:
@@ -74,7 +65,6 @@ class Intent:
             purpose: Literal[
                 "player-tehai-update-notation", 
                 "player-datsuhai-notation", 
-                "river-update-notation", 
                 "hyoujihai-update-notation", 
                 "ask-to-datsuhai", 
                 "ask-to-datsuhai-or-other-choices", 

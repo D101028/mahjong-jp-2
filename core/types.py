@@ -35,10 +35,6 @@ PlayerDatsuhaiNotationContentType = TypedDict('PlayerDatsuhaiNotationContentType
     "datsuhai": PaiDictType, 
     "is-riichi": bool
 })
-RiverUpdateNotationContentType = TypedDict('RiverUpdateNotationContentType', {
-    "player-id": int, 
-    "river-info": RiverDictType
-})
 HyoujihaiUpdateNotationContentType = TypedDict('HyoujihaiUpdateNotationContentType', {
     "hyoujihai-info": HyoujihaiInfoDictType
 })
