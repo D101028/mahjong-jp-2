@@ -549,7 +549,7 @@ def is_agari(pai_list: list[Pai]) -> bool:
                 a1 = a1[3:]
                 continue
             a, ap, app = a1[0].get_shuntsu()
-            if ap is not None and app is not None:
+            if ap is not None and app is not None and ap in a1 and app in a1:
                 a2.append((a, ap, app))
                 a1.remove(a)
                 a1.remove(ap)
