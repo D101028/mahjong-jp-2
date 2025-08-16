@@ -47,6 +47,14 @@ class Pai:
     def usual_name(self) -> str:
         return f"{self.number}{self.type}"
 
+    @property
+    def is_yaochuu(self) -> bool:
+        if self._number in (1, 9):
+            return True
+        if self._type == support.token_paitype_dict[tokens.zuu]:
+            return True
+        return False
+
     def __hash__(self) -> int:
         return hash(self.usual_name)
 
@@ -1093,17 +1101,17 @@ def get_fusuu(yaku_list: list[Yaku], tehai_comb: TehaiComb, param: Param, is_men
         else:
             fu += 2
     for p in ankou_pai:
-        if p in yaochuu_list:
+        if p.is_yaochuu:
             fu += 8
         else:
             fu += 4
     for p in minkan_pai:
-        if p in yaochuu_list:
+        if p.is_yaochuu:
             fu += 16
         else:
             fu += 8
     for p in ankan_pai:
-        if p in yaochuu_list:
+        if p.is_yaochuu:
             fu += 32
         else:
             fu += 16
@@ -1204,7 +1212,7 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
             result.append(token_yaku_dict[tokens.houteiraoyui])
     
     # 斷么九
-    if all((p not in yaochuu_list) for p in all_pai):
+    if all(not p.is_yaochuu for p in all_pai):
         if not BaseRules.kuitan_enabled and not is_menchin:
             pass 
         else:
@@ -1329,8 +1337,8 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
                 break
 
     # 混全、純全
-    if all(t.pai_list[0] in yaochuu_list for t in toitsu_list):
-        if all(any(p in yaochuu_list for p in m.pai_list) for m in mentsu_furo_list):
+    if all(t.pai_list[0].is_yaochuu for t in toitsu_list):
+        if all(any(p.is_yaochuu for p in m.pai_list) for m in mentsu_furo_list):
             if all(t.pai_list[0] in chinroutoupai_list for t in toitsu_list) and all(any(p in chinroutoupai_list for p in m.pai_list) for m in mentsu_furo_list):
                 result.append(token_yaku_dict[tokens.junchantaiyaochuu])
             else:
@@ -1355,7 +1363,7 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
             result.append(token_yaku_dict[tokens.sanankoo])
 
     # 混老頭、清老頭
-    if all(p in yaochuu_list for p in all_pai):
+    if all(p.is_yaochuu for p in all_pai):
         if all(p in chinroutoupai_list for p in all_pai):
             result.append(token_yaku_dict[tokens.chinroutou])
         elif all(p.type != support.token_paitype_dict[tokens.zuu] for p in all_pai):
