@@ -4,7 +4,7 @@
 「junme」計數：玩家初始 junme 為 0，每打出一張牌會 +1。
 """
 
-from typing import Literal, Iterable, Union, overload
+from typing import Literal, Iterable, overload
 
 from core.ext import support, yaku, tokens
 from core.ext.index import *
@@ -60,7 +60,7 @@ class Pai:
     def __str__(self) -> str:
         return f"<Pai {self.name}>"
 
-    def equal(self, other: Union['Pai', str], is_strict: bool = True) -> bool:
+    def equal(self, other: "Pai | str", is_strict: bool = True) -> bool:
         if not isinstance(other, Pai | str):
             raise TypeError(f"other must be a Pai or str, not {type(other).__name__}")
         if isinstance(other, str):
@@ -77,12 +77,12 @@ class Pai:
             return support.paitype_sign_number_dict[self.type]*10 + int(self.name[0])
 
     @overload
-    def next(self, allow_mod: Literal[False] = False) -> Union['Pai', None]:
+    def next(self, allow_mod: Literal[False] = False) -> "Pai | None":
         ...
     @overload
     def next(self, allow_mod: Literal[True]) -> 'Pai':
         ...
-    def next(self, allow_mod = False) -> Union['Pai', None]:
+    def next(self, allow_mod = False) -> "Pai | None":
         if self.type == support.token_paitype_dict[tokens.zuu]:
             if self.number >= 7 and not allow_mod:
                 return None
@@ -93,12 +93,12 @@ class Pai:
             return Pai(str((self.number + 1) % 10) + self.type)
     
     @overload
-    def previous(self, allow_mod: Literal[False] = False) -> Union['Pai', None]:
+    def previous(self, allow_mod: Literal[False] = False) -> "Pai | None":
         ...
     @overload
     def previous(self, allow_mod: Literal[True]) -> 'Pai':
         ...
-    def previous(self, allow_mod = False) -> Union['Pai', None]:
+    def previous(self, allow_mod = False) -> "Pai | None":
         if self.type == support.token_paitype_dict[tokens.zuu]:
             if self.number <= 1 and not allow_mod:
                 return None
@@ -109,15 +109,15 @@ class Pai:
             return Pai(str((self.number - 1) % 10) + self.type)
 
     @overload
-    def get_shuntsu(self, form: Literal['head'] = 'head') -> tuple['Pai', Union['Pai', None], Union['Pai', None]]:
+    def get_shuntsu(self, form: Literal['head'] = 'head') -> tuple['Pai', "Pai | None", "Pai | None"]:
         ...
     @overload
-    def get_shuntsu(self, form: Literal['middle']) -> tuple[Union['Pai', None], 'Pai', Union['Pai', None]]:
+    def get_shuntsu(self, form: Literal['middle']) -> tuple["Pai | None", 'Pai', "Pai | None"]:
         ...
     @overload
-    def get_shuntsu(self, form: Literal['tail']) -> tuple[Union['Pai', None], Union['Pai', None], 'Pai']:
+    def get_shuntsu(self, form: Literal['tail']) -> tuple["Pai | None", "Pai | None", 'Pai']:
         ...
-    def get_shuntsu(self, form: Literal['head', 'middle', 'tail'] = 'head') -> tuple[Union['Pai', None], Union['Pai', None], Union['Pai', None]]:
+    def get_shuntsu(self, form: Literal['head', 'middle', 'tail'] = 'head') -> tuple["Pai | None", "Pai | None", "Pai | None"]:
         if self.type == support.token_paitype_dict[tokens.zuu]:
             return (self, None, None)
         if form == 'head':
@@ -135,13 +135,13 @@ class Pai:
             pre2 = pre1.previous()
             return (pre2, pre1, self)
 
-    def get_near(self) -> tuple[Union['Pai', None], Union['Pai', None], 'Pai', Union['Pai', None], Union['Pai', None]]:
+    def get_near(self) -> tuple["Pai | None", "Pai | None", 'Pai', "Pai | None", "Pai | None"]:
         if self.type == support.token_paitype_dict[tokens.zuu]:
             return (None, None, self, None, None)
-        pre1: Union['Pai', None] = self.previous()
-        pre2: Union['Pai', None] = None
-        next1: Union['Pai', None] = self.next()
-        next2: Union['Pai', None] = None
+        pre1: "Pai | None" = self.previous()
+        pre2: "Pai | None" = None
+        next1: "Pai | None" = self.next()
+        next2: "Pai | None" = None
         next1 = self.next()
         if next1 is not None:
             next2 = next1.next()
@@ -276,7 +276,7 @@ class BasicFuro:
             "type": self.type, 
             "self-pai-tuple": tuple(pai.to_dict() for pai in self.self_pai_tuple), 
             "received-pai": self.received_pai.to_dict(), 
-            "from_player_id": self.from_player_id, 
+            "from-player-id": self.from_player_id, 
             "self-koutsu-furo": None
         }
 
@@ -299,7 +299,7 @@ class Minkan:
             "type": self.type, 
             "self-pai-tuple": tuple(pai.to_dict() for pai in self.self_pai_tuple), 
             "received-pai": self.received_pai.to_dict(), 
-            "from_player_id": self.from_player_id, 
+            "from-player-id": self.from_player_id, 
             "self-koutsu-furo": None
         }
 
@@ -321,7 +321,7 @@ class Kakan:
             "type": self.type, 
             "self-pai-tuple": None, 
             "received-pai": self.received_pai.to_dict(), 
-            "from_player_id": None, 
+            "from-player-id": None, 
             "self-koutsu-furo": self.koutsu_furo.to_dict()
         }
     
@@ -342,7 +342,7 @@ class Ankan:
             "type": self.type, 
             "self-pai-tuple": tuple(pai.to_dict() for pai in self.self_pai_tuple), 
             "received-pai": None, 
-            "from_player_id": None, 
+            "from-player-id": None, 
             "self-koutsu-furo": None
         }
     
@@ -863,7 +863,7 @@ class Tehai:
             result += tehai_comb_list
         return result
 
-    def is_able_to_chii(self, pai: Pai) -> bool:
+    def is_able_to_chi(self, pai: Pai) -> bool:
         if pai.type == support.token_paitype_dict[tokens.zuu]:
             return False
         pre2, pre1, _, next1, next2 = pai.get_near()
