@@ -5,7 +5,7 @@ from core.pai import Pai
 from core.player import Player, players_dict
 from core.ext import support
 from core.ext.index import *
-from core.ext.rule import CommonRules, YoninRules, SanninRules
+from core.ext.rule import BaseRules, YoninRules, SanninRules
 from core.types import *
 
 class DoraHyouji:
@@ -102,7 +102,7 @@ class YamaChain:
 
 class YoninYama(YamaChain):
     def __init__(self) -> None:
-        if CommonRules.akadora_enabled:
+        if BaseRules.akadora_enabled:
             super().__init__(
                 PAI_INDEX_WITH_AKADORA, support.yonin_rinshansuu, support.yonin_dora_hyoujisuu
             )
@@ -113,7 +113,7 @@ class YoninYama(YamaChain):
 
 class SanninYama(YamaChain):
     def __init__(self) -> None:
-        if CommonRules.akadora_enabled:
+        if BaseRules.akadora_enabled:
             super().__init__(
                 PAI_INDEX_SANNIN_WITH_AKADORA, support.sannin_rinshansuu, support.sannin_dora_hyoujisuu
             )

@@ -12,15 +12,23 @@ class BaseRules:
 
     rienfontoitsu_fusuu = 2 # 連風對子符數
 
-    atamahane_enabled = False # 啟用截胡（頭跳ね）
-
-class CommonRules:
-
     akadora_enabled = True # 啟用紅寶牌
 
     tobitsuzuku_enabled = False # 啟用擊飛繼續規則
 
     last_oya_infinitely_renchan_enabled = False # 啟用 all last 可無限連莊規則 (i.e. 末莊在最後一局結束時保持 1 位，並且該局末莊是贏家或者流局有聽牌，則末莊可選擇是否連莊，或直接結束遊戲)
+
+    atamahane_enabled = False # 啟用截胡（頭跳ね）
+
+
+
+# class CommonRules:
+
+#     akadora_enabled = True # 啟用紅寶牌
+
+#     tobitsuzuku_enabled = False # 啟用擊飛繼續規則
+
+#     last_oya_infinitely_renchan_enabled = False # 啟用 all last 可無限連莊規則 (i.e. 末莊在最後一局結束時保持 1 位，並且該局末莊是贏家或者流局有聽牌，則末莊可選擇是否連莊，或直接結束遊戲)
 
 class YoninRules: # 四人規則
 
