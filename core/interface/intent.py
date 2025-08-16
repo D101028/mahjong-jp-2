@@ -1,4 +1,3 @@
-import json
 from typing import Any, Literal, overload
 
 from core.types import *
@@ -27,9 +26,45 @@ class Intent:
         self, 
         response_type: Literal['no-response'], 
         purpose: Literal[
+            "player-minpai-notation", 
+        ], 
+        content: PlayerMinpaiNotationContentType) -> None:
+        ...
+    @overload
+    def __init__(
+        self, 
+        response_type: Literal['no-response'], 
+        purpose: Literal[
+            "player-penuki-notation", 
+        ], 
+        content: PlayerPenukiNotationContentType) -> None:
+        ...
+    @overload
+    def __init__(
+        self, 
+        response_type: Literal['no-response'], 
+        purpose: Literal[
+            "player-ron-notation", 
+        ], 
+        content: PlayerRonNotationContentType) -> None:
+        ...
+    @overload
+    def __init__(
+        self, 
+        response_type: Literal['no-response'], 
+        purpose: Literal[
+            "player-tsumo-notation", 
+        ], 
+        content: PlayerTsumoNotationContentType) -> None:
+        ...
+    @overload
+    def __init__(
+        self, 
+        response_type: Literal['no-response'], 
+        purpose: Literal[
             "hyoujihai-update-notation"
         ], 
-        content: dict[str, Any]) -> None:
+        content: HyoujihaiUpdateNotationContentType) -> None:
         ...
     @overload
     def __init__(
@@ -61,20 +96,13 @@ class Intent:
 
     def __init__(
             self, 
-            response_type: Literal["standard", "no-response"], 
-            purpose: Literal[
-                "player-tehai-update-notation", 
-                "player-datsuhai-notation", 
-                "hyoujihai-update-notation", 
-                "ask-to-datsuhai", 
-                "ask-to-datsuhai-or-other-choices", 
-                "ask-to-choices"
-            ], 
+            response_type: Literal['no-response', 'standard'], 
+            purpose: str, 
             content: Any
         ) -> None:
-        self.response_type = response_type
+        self.response_type: Literal['no-response', 'standard'] = response_type
         self.purpose = purpose
-        self.content = content if isinstance(content, str) else json.dumps(content)
+        self.content = content
 
     def to_dict(self):
         return {

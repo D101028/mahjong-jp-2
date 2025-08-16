@@ -1,4 +1,4 @@
-from typing import Any, Literal, TypedDict, Union
+from typing import Any, Literal, TypedDict
 
 PaiDictType = TypedDict('PaiDictType', {
     "name": str
@@ -7,8 +7,8 @@ FuroDictType = TypedDict('FuroDictType', {
     "type": int, 
     "self-pai-tuple": tuple[PaiDictType, ...] | None, 
     "received-pai": PaiDictType | None, 
-    "from_player_id": int | None, 
-    "self-koutsu-furo": Union[None, 'FuroDictType']
+    "from-player-id": int | None, 
+    "self-koutsu-furo": "None | FuroDictType"
 })
 TehaiDictType = TypedDict('TehaiDictType', {
     "pai-list": list[PaiDictType], 
@@ -29,22 +29,40 @@ HyoujihaiInfoDictType = TypedDict('HyoujihaiInfoDictType', {
 
 PlayerTehaiUpdateNotationContentType = TypedDict('PlayerTehaiUpdateNotationContentType', {
     "tehai-info": TehaiDictType
-})
+}) # Response: None
 PlayerDatsuhaiNotationContentType = TypedDict('PlayerDatsuhaiNotationContentType', {
     "player-id": int, 
     "datsuhai": PaiDictType, 
     "is-riichi": bool
-})
+}) # Response: None
+PlayerMinpaiNotationContentType = TypedDict('PlayerMinpaiNotationContentType', {
+    "player-id": int, 
+    "furo-info": FuroDictType
+}) # Response: None
+PlayerPenukiNotationContentType = TypedDict('PlayerPenukiNotationContentType', {
+    "player-id": int, 
+    "penuki-pai": PaiDictType
+}) # Response: None
+PlayerRonNotationContentType = TypedDict('PlayerRonNotationContentType', {
+    "player-id": int, 
+    "tehai-info": TehaiDictType, 
+    "ron-pai": PaiDictType, 
+    "from-player-id": int
+}) # Response: None
+PlayerTsumoNotationContentType = TypedDict('PlayerTsumoNotationContentType', {
+    "player-id": int, 
+    "tehai-info": TehaiDictType
+}) # Response: None
 HyoujihaiUpdateNotationContentType = TypedDict('HyoujihaiUpdateNotationContentType', {
     "hyoujihai-info": HyoujihaiInfoDictType
-})
+}) # Response: None
 AskToDatsuhaiContentType = TypedDict('AskToDatsuhaiContentType', {
     "datsuhai-choices": list[int]
-})
+}) # Response: int
 AskToDatsuhaiOrOtherChoicesContentType = TypedDict('AskToDatsuhaiOrOtherChoicesContentType', {
     "datsuhai-choices": list[int], 
     "other-choices": list[Literal['ankan', 'kakan', 'penuki', 'tsumo', 'cancel']]
-})
+}) # Response: int
 AskToChoicesContentType = TypedDict('AskToChoicesContentType', {
     "choices": list[Literal['chi', 'pon', 'minkan', 'ron', 'cancel']]
-})
+}) # Response: int
