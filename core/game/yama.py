@@ -23,7 +23,7 @@ class DoraHyouji:
         return self.dora_hyouji_list[:self.current_hyouji_suu]
     
     def get_ura_hyoujis(self) -> list[Pai]:
-        return self.ura_hyouji_list[:self.ura_hyouji_list]
+        return self.ura_hyouji_list[:self.current_hyouji_suu]
 
     def flop(self) -> Pai:
         if self.current_hyouji_suu + 1 >= len(self.dora_hyouji_list):
