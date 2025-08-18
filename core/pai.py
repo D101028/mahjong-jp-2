@@ -926,11 +926,43 @@ class Tehai:
         return len(agari_result_list) != 0
 
 class Param:
+    @overload
+    def __init__(self, 
+                 riichi_junme: int | None, 
+                 agari_junme: int, 
+                 agari_type: Literal['ron'], 
+                 is_junme_broken: bool, 
+                 is_chyankan: bool, 
+                 remaining_pai_num: int, 
+                 menfon: int, 
+                 chanfon: int, 
+                 is_rinshankaihou: Literal[False], 
+                 dora_pointers: list[Pai], 
+                 uradora_pointers: list[Pai] | None, 
+                 is_kanhuri: bool, 
+                 is_tsubamegaeshi: bool) -> None:
+        ...
+    @overload
+    def __init__(self, 
+                 riichi_junme: int | None, 
+                 agari_junme: int, 
+                 agari_type: Literal['tsumo'], 
+                 is_junme_broken: bool, 
+                 is_chyankan: Literal[False], 
+                 remaining_pai_num: int, 
+                 menfon: int, 
+                 chanfon: int, 
+                 is_rinshankaihou: bool, 
+                 dora_pointers: list[Pai], 
+                 uradora_pointers: list[Pai] | None, 
+                 is_kanhuri: Literal[False], 
+                 is_tsubamegaeshi: Literal[False]) -> None:
+        ...
     def __init__(self, 
                  riichi_junme: int | None, 
                  agari_junme: int, 
                  agari_type: Literal["ron", "tsumo"], 
-                 break_junme: bool, 
+                 is_junme_broken: bool, 
                  is_chyankan: bool, 
                  remaining_pai_num: int, 
                  menfon: int, 
@@ -943,7 +975,7 @@ class Param:
         self.riichi_junme = riichi_junme # 打出立直牌後的巡目
         self.agari_junme = agari_junme
         self.agari_type: Literal["ron", "tsumo"] = agari_type
-        self.break_junme: bool = break_junme
+        self.is_junme_broken: bool = is_junme_broken
         self.is_chyankan = is_chyankan
         self.remaining_pai_num = remaining_pai_num
         self.menfon = menfon
@@ -1226,7 +1258,7 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
             result.append(token_yaku_dict[tokens.dabururiichi])
         else:
             result.append(token_yaku_dict[tokens.riichi])
-        if not param.break_junme:
+        if not param.is_junme_broken:
             if param.agari_type == 'tsumo' and param.agari_junme == param.riichi_junme: # 一發自摸
                 result.append(token_yaku_dict[tokens.ippatsu])
             elif param.agari_type == 'ron' and param.agari_junme == param.riichi_junme: # 一發榮和

@@ -47,7 +47,7 @@ class Player:
 
         self.riichi_junme: int | None = None # 打出立直牌後的巡目
         self.player_junme: int = 0
-        self.break_junme: bool = False
+        self.is_junme_broken: bool = False
 
         self.doujin_furiten_pais: set[Pai] = set() # 保存會同巡振聽的牌，玩家打出牌後清空
         # self.riichi_furiten_pais: set[Pai] = set() # 保存會立直振聽的牌
@@ -81,7 +81,7 @@ class Player:
         """從 tehai 打牌"""
         # 巡目處理
         self.player_junme += 1
-        self.break_junme = False
+        self.is_junme_broken = False
         if to_riichi:
             self.riichi_junme = self.player_junme
         # 選擇打/切牌

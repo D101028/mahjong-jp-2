@@ -6,7 +6,7 @@
 
 from collections import OrderedDict
 from itertools import combinations_with_replacement
-from typing import Literal, Iterable
+from typing import Literal, Iterable, Protocol, Any
 
 from core.ext import tokens, support
 from core.ext.rule import BaseRules
@@ -69,7 +69,12 @@ class RoundResult:
         self.tsumo_player_result = tsumo_player_result
         self.kyuushukyuhai_player = kyuushukyuhai_player
 
-def is_included(iter1: Iterable[Pai], iter2: Iterable[Pai]) -> bool:
+
+class SupportsEqual(Protocol):
+    def equal(self, other: Any, /, *args, **kwargs) -> bool:
+        ...
+
+def is_included(iter1: Iterable[SupportsEqual], iter2: Iterable[SupportsEqual]) -> bool:
     """return True if iter1 is included in iter2"""
     l2 = list(iter2)
     for p1 in iter1:
@@ -161,7 +166,7 @@ class YoninPlayerRound:
 
     def break_junme(self) -> None:
         for player in players_dict.values():
-            player.break_junme = True
+            player.is_junme_broken = True
 
     def chi(self, player: Player, from_player: Player) -> 'YoninPlayerRound':
         self.break_junme()
@@ -343,7 +348,7 @@ class YoninPlayerRound:
         for plyer in ordered_players:
             if plyer.is_able_to_ron(pai, Param(
                 plyer.riichi_junme, plyer.player_junme, 'ron', 
-                plyer.break_junme, True, self.yama.get_remaining(), 
+                plyer.is_junme_broken, True, self.yama.get_remaining(), 
                 plyer.menfon, self.chanfon, False, 
                 self.yama.dora_hyouji.get_dora_hyoujis(), self.yama.dora_hyouji.get_ura_hyoujis(), 
                 False, False
@@ -373,7 +378,7 @@ class YoninPlayerRound:
             for ron_player in ron_players:
                 players_args.append((ron_player, Param(
                     ron_player.riichi_junme, ron_player.player_junme, 'ron', 
-                    ron_player.break_junme, True, self.yama.get_remaining(), 
+                    ron_player.is_junme_broken, True, self.yama.get_remaining(), 
                     ron_player.menfon, self.chanfon, False, 
                     self.yama.dora_hyouji.get_dora_hyoujis(), self.yama.dora_hyouji.get_ura_hyoujis(), 
                     False, False
@@ -446,7 +451,7 @@ class YoninPlayerRound:
                     continue
                 temp_result_list = get_agari_result_list(plyer.tehai, pai, Param(
                     plyer.riichi_junme, plyer.player_junme, 'ron', 
-                    plyer.break_junme, True, self.yama.get_remaining(), 
+                    plyer.is_junme_broken, True, self.yama.get_remaining(), 
                     plyer.menfon, self.chanfon, False, 
                     self.yama.dora_hyouji.get_dora_hyoujis(), self.yama.dora_hyouji.get_ura_hyoujis(), 
                     False, False
@@ -483,7 +488,7 @@ class YoninPlayerRound:
                     for ron_player in ron_players:
                         players_args.append((ron_player, Param(
                             ron_player.riichi_junme, ron_player.player_junme, 'ron', 
-                            ron_player.break_junme, True, self.yama.get_remaining(), 
+                            ron_player.is_junme_broken, True, self.yama.get_remaining(), 
                             ron_player.menfon, self.chanfon, False, 
                             self.yama.dora_hyouji.get_dora_hyoujis(), self.yama.dora_hyouji.get_ura_hyoujis(), 
                             False, False
@@ -561,7 +566,7 @@ class YoninPlayerRound:
                 if player.tehai.is_able_to_kan(pai):
                     player_actions_dict[player].append('minkan')
             if player.is_able_to_ron(pai, Param(
-                player.riichi_junme, player.player_junme, 'ron', player.break_junme, 
+                player.riichi_junme, player.player_junme, 'ron', player.is_junme_broken, 
                 False, remaining, player.menfon, self.chanfon, 
                 False, self.yama.dora_hyouji.get_dora_hyoujis(), self.yama.dora_hyouji.get_ura_hyoujis(), 
                 self.prparam.player_last_motion in (
@@ -626,7 +631,7 @@ class YoninPlayerRound:
                 for ron_player in ordered_ron_players:
                     players_args.append((ron_player, Param(
                         ron_player.riichi_junme, ron_player.player_junme, 'ron', 
-                        ron_player.break_junme, True, self.yama.get_remaining(), 
+                        ron_player.is_junme_broken, True, self.yama.get_remaining(), 
                         ron_player.menfon, self.chanfon, False, 
                         self.yama.dora_hyouji.get_dora_hyoujis(), self.yama.dora_hyouji.get_ura_hyoujis(), 
                         self.prparam.player_last_motion in (
@@ -752,7 +757,7 @@ class YoninPlayerRound:
                 case 'tsumo':
                     return self.tsumo(Param(
                         self.player.riichi_junme, self.player.player_junme, 'tsumo', 
-                        self.player.break_junme, False, self.yama.get_remaining(), 
+                        self.player.is_junme_broken, False, self.yama.get_remaining(), 
                         self.player.menfon, self.chanfon, self.prparam.player_last_motion in (
                             MotionTokens.motion_minkan_rinshan, 
                             MotionTokens.motion_kakan_rinshan, 
@@ -806,7 +811,7 @@ class YoninPlayerRound:
             full_pai_list: list[Pai] = self.player.tehai.pai_list + [new_pai]
             param = Param(
                 self.player.riichi_junme, self.player.player_junme, 'tsumo', 
-                self.player.break_junme, False, self.yama.get_remaining(), 
+                self.player.is_junme_broken, False, self.yama.get_remaining(), 
                 self.player.menfon, self.chanfon, is_rinshan, 
                 self.yama.dora_hyouji.get_dora_hyoujis(), self.yama.dora_hyouji.get_ura_hyoujis(), 
                 False, False
@@ -816,7 +821,7 @@ class YoninPlayerRound:
             choices: list[Literal['ankan', 'kakan', 'penuki', 'tsumo', 'kyuushukyuhai', 'riichi', 'cancel']] = []
             ## 判斷自摸
             if is_agari(full_pai_list):
-                if self.player.player_junme == 0 and not self.player.break_junme and support.fonwei_tuple.index(self.player.menfon) == 0:
+                if self.player.player_junme == 0 and not self.player.is_junme_broken and support.fonwei_tuple.index(self.player.menfon) == 0:
                     # 東家第一輪，手牌中任意牌皆可做為自摸牌
                     pai_strict_list: list[Pai] = []
                     for p in full_pai_list:
@@ -851,7 +856,7 @@ class YoninPlayerRound:
             if any(full_pai_list.count(p) >= 4 for p in full_pai_list):
                 choices.append('ankan')
             ## 判斷九種九牌
-            if self.player.player_junme == 0 and not self.player.break_junme:
+            if self.player.player_junme == 0 and not self.player.is_junme_broken:
                 counted_set: set[Pai] = set()
                 count = 0
                 for p in full_pai_list:
