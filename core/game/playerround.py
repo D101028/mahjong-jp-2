@@ -634,11 +634,7 @@ class YoninPlayerRound:
                         ron_player.is_junme_broken, True, self.yama.get_remaining(), 
                         ron_player.menfon, self.chanfon, False, 
                         self.yama.dora_hyouji.get_dora_hyoujis(), self.yama.dora_hyouji.get_ura_hyoujis(), 
-                        self.prparam.player_last_motion in (
-                            MotionTokens.motion_minkan_rinshan, 
-                            MotionTokens.motion_kakan_rinshan, 
-                            MotionTokens.motion_ankan_rinshan
-                        ), is_to_riichi
+                        False, False
                     )))
                 return self.ron(players_args, from_player, agari_pai)
             if sorted_results['minkan']:
