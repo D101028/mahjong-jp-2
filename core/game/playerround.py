@@ -878,4 +878,38 @@ class YoninPlayerRound:
             return self.datsuhai_after(pai)
         else:
             raise ValueError(f"Invalid token of prparam.player_last_motion: {last_motion}")
+    
+    def debug_skip(self) -> "YoninPlayerRound | RoundResult":
+        """直接摸切(或者打 tehai.pai_list 的最後一張)，並跳過所有玩家選擇，然後下家摸牌或者流局結束"""
+        if self.player.tehai.new_pai is None:
+            pai = self.player.datsuhai(len(self.player.tehai.pai_list)-1)
+        else:
+            pai = self.player.datsuhai()
         
+        next_player = self.player.next()
+        
+        # 判斷四風連打
+        if all((plyer.player_junme == 1 and len(plyer.river.pai_list) == 1) for plyer in players_dict.values()) and self.player.menfon == tokens.pei:
+            fonpais = tuple(Pai(name) for name in [support.token_yakuhai_painame_dict[t] for t in (tokens.yakuhai_ton, tokens.yakuhai_nan, tokens.yakuhai_shaa, tokens.yakuhai_pei)])
+            if pai in fonpais and all(plyer.river.pai_list[0] == pai for plyer in get_ordered_players(self.player)):
+                return RoundResult(RoundResultTokens.suuhonrenta_ryuukyoku)
+        
+        # 流局 or 下一輪
+        if self.suukansanra_ryuukyoku_satisfied():
+            # 四槓散了
+            return RoundResult(RoundResultTokens.suukansanra_ryuukyoku)
+        elif self.yama.get_remaining() == 0:
+            # 普通流局
+            tenpai_players: list[Player] = []
+            for player in players_dict.values():
+                if player.tehai.is_tenpai():
+                    tenpai_players.append(player)
+            return RoundResult(
+                type_=RoundResultTokens.normal_ryuukyoku, 
+                tenpai_players=tenpai_players
+            )
+        else:
+            self.draw(next_player)
+            return YoninPlayerRound(next_player, self.yama, self.chanfon, PlayerRoundParam(
+                MotionTokens.motion_tsumo_normal
+            ))

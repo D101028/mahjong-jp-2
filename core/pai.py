@@ -13,21 +13,29 @@ from core.ext.yaku import Yaku, token_yaku_dict
 from core.types import *
 
 class Pai:
-    def __init__(self, name: str):
-        if not isinstance(name, str):
-            raise TypeError(f"Pai() argument must be a string or None, not '{type(name).__name__}'")
-        if len(name) != 2 or \
-            not name[0].isdigit() or \
-            name[1] not in support.token_paitype_dict.values():
-            raise ValueError(f"Invalid value for Pai parameter name: {name}")
-        if name[1] == support.token_paitype_dict[tokens.zuu]:
-            num = int(name[0])
-            if num > 7 or num == 0:
-                raise ValueError(f"Invalid value for Pai parameter name: {name}")
+    def __init__(self, arg: str | PaiDictType):
+        self._number: int
+        self._type: str
+        self._is_akadora: bool
+        
+        if isinstance(arg, dict) and is_same_dict_type(arg, PaiDictType):
+            arg = arg["name"]
+        
+        if not isinstance(arg, str):
+            raise TypeError(f"Pai() argument must be a string or PaiDictType like dictionary, not '{type(arg).__name__}'")
 
-        self._number: int = int(name[0]) if name[0] != "0" else 5
-        self._type: str = name[1]
-        self._is_akadora: bool = (name[0] == "0")
+        if len(arg) != 2 or \
+            not arg[0].isdigit() or \
+            arg[1] not in support.token_paitype_dict.values():
+            raise ValueError(f"Invalid value for Pai parameter name: {arg}")
+        if arg[1] == support.token_paitype_dict[tokens.zuu]:
+            num = int(arg[0])
+            if num > 7 or num == 0:
+                raise ValueError(f"Invalid value for Pai parameter name: {arg}")
+
+        self._number = int(arg[0]) if arg[0] != "0" else 5
+        self._type = arg[1]
+        self._is_akadora = (arg[0] == "0")
 
     @property
     def number(self) -> int:
@@ -226,9 +234,13 @@ class Mentsu:
     def __init__(self, type_: int, pai_list: list[Pai]) -> None:
         if type_ not in (tokens.koutsu, tokens.shuntsu):
             raise ValueError(f"Unknown type {type_} for Mentsu")
-        self.type = type_ # tokens.koutsu, tokens.shuntsu, (tokens.ankan, tokens.kakan, tokens.minkan only appear in furo)
+        self._type = type_ # tokens.koutsu, tokens.shuntsu, (tokens.ankan, tokens.kakan, tokens.minkan only appear in furo)
         self.pai_list = pai_list
     
+    @property
+    def type(self) -> int:
+        return self._type
+
     def __str__(self) -> str:
         output = "(" + " ".join([str(p.name) for p in self.pai_list]) + ")"
         return f"<Mentsu {output}>"
@@ -272,9 +284,32 @@ class Toitsu:
     def copy(self) -> 'Toitsu':
         return Toitsu(pai_list=[p.copy() for p in self.pai_list])
 
+def to_furo(arg: FuroDictType):
+    if not is_same_dict_type(arg, FuroDictType):
+        raise ValueError(f'Expect a FuroDictType')
+    type_ = arg["type"]
+    self_pai_tuple = arg["self-pai-tuple"]
+    received_pai = arg["received-pai"]
+    from_player_id = arg["from-player-id"]
+    self_koutsu_furo = arg["self-koutsu-furo"]
+    if type_ in (tokens.koutsu, tokens.shuntsu):
+        assert self_pai_tuple is not None and received_pai is not None and from_player_id is not None
+        return BasicFuro(type_, (Pai(self_pai_tuple[0]), Pai(self_pai_tuple[1])), Pai(received_pai), from_player_id)
+    elif type_ == tokens.minkan:
+        assert self_pai_tuple is not None and received_pai is not None and from_player_id is not None
+        return Minkan((Pai(self_pai_tuple[0]), Pai(self_pai_tuple[1]), Pai(self_pai_tuple[2])), Pai(received_pai), from_player_id)
+    elif type_ == tokens.kakan:
+        assert self_koutsu_furo is not None and received_pai is not None
+        return Kakan(to_furo(self_koutsu_furo), Pai(received_pai))
+    elif type_ == tokens.ankan:
+        assert self_pai_tuple is not None
+        p1, p2, p3, p4 = self_pai_tuple
+        return Ankan((Pai(p1), Pai(p2), Pai(p3), Pai(p4)))
+    else:
+        raise ValueError(f"Unknown type: {type_}")
+
 class BasicFuro:
     """基本副露：吃、碰形成的副露"""
-
     def __init__(self, 
                  type_: int, 
                  self_pai_tuple: tuple[Pai, Pai], 
@@ -282,13 +317,27 @@ class BasicFuro:
                  from_player_id: int) -> None:
         if type_ not in (tokens.koutsu, tokens.shuntsu):
             raise ValueError(f"Unknown type {type_} for BasicFuro")
-        self.type = type_ # token.koutsu, token.shuntsu
-        self.self_pai_tuple = self_pai_tuple
-        self.received_pai = received_pai
-        self.from_player_id = from_player_id
-
-        self.pai_tuple = (*self_pai_tuple, received_pai)
+        self._type: int = type_ # token.koutsu, token.shuntsu
+        self._self_pai_tuple: tuple[Pai, Pai] = self_pai_tuple
+        self._received_pai: Pai = received_pai
+        self._from_player_id: int = from_player_id
     
+    @property
+    def type(self) -> int:
+        return self._type
+    @property
+    def self_pai_tuple(self) -> tuple[Pai, Pai]:
+        return self._self_pai_tuple
+    @property
+    def received_pai(self) -> Pai:
+        return self._received_pai
+    @property
+    def from_player_id(self) -> int:
+        return self._from_player_id
+    @property
+    def pai_tuple(self) -> tuple[Pai, Pai, Pai]:
+        return (*self.self_pai_tuple, self.received_pai)
+
     def to_mentsu(self) -> Mentsu:
         return Mentsu(self.type, [p.copy() for p in self.pai_tuple])
     
@@ -734,16 +783,24 @@ def get_tenpai_list(pai_list: list[Pai]) -> list[Pai]:
     return result
 
 class Tehai:
-    def __init__(self, pai_list: list[Pai] | list[str]) -> None:
-        if not isinstance(pai_list, list):
-            raise TypeError(f"pai_list must be a list or str, not {type(pai_list).__name__}")
-        pai_list = [Pai(p) if isinstance(p, str) else p.copy() for p in pai_list]
-        self.pai_list = pai_list  # len = 1 4 7 10 13
+    def __init__(self, arg: list[Pai] | list[str] | str | TehaiDictType) -> None:
+        self.pai_list: list[Pai]
         self.furo_list: list[FuroType] = []
         self.penuki_list: list[Pai] = []
-
         self.new_pai: Pai | None = None
-    
+        
+        if isinstance(arg, dict) and is_same_dict_type(arg, TehaiDictType):
+            self.pai_list = list(map(Pai, arg["pai-list"]))
+            self.furo_list = list(map(to_furo, arg["furo-list"]))
+            self.penuki_list = list(map(Pai, arg["penuki-list"]))
+            self.new_pai = Pai(arg["new-pai"]) if arg["new-pai"] is not None else None
+        elif isinstance(arg, str):
+            self.pai_list = create_pai_list(arg)
+        elif isinstance(arg, list):
+            self.pai_list = [Pai(p) if isinstance(p, str) else p.copy() for p in arg]
+        else:
+            raise ValueError(f"arg should be a string, list of Pai or string, or TehaiDictType like dictionary, not {type(arg).__name__}")
+
     def __str__(self) -> str:
         output = ""
         output += " ".join([p.__str__() for p in self.pai_list])

@@ -1,5 +1,6 @@
 from typing import Any, Literal, TypedDict
-def is_same_dict_type(dict1: dict, dict_type: type) -> bool:
+
+def is_same_dict_type(dict1: Any, dict_type: type) -> bool:
     """
     Checks if dict1 matches the structure and types defined in dict_type (TypedDict).
     """
