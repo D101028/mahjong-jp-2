@@ -4,6 +4,8 @@ from threading import Thread
 from typing import Any, Literal
 
 from .prompt import Prompt
+from config import Config
+from core.types import *
 
 class TerminalResponse:
     def __init__(self, response: str = "", is_ok: bool = False) -> None:
@@ -19,6 +21,20 @@ class Interactor:
         return json.dumps([
             prompt.to_dict() for prompt in self.prompts
         ])
+
+    def to_console(self) -> str:
+        # result = ""
+        # for prompt in self.prompts:
+        #     d1 = prompt.intent.to_dict()
+        #     for key, value in prompt.intent.content.items():
+        #         if isinstance(value, (list, tuple)) and is_same_dict_type(value[0], PaiDictType):
+        #             d1['content'][key] = " ".join(value)
+            
+        #     result = f"{result}\n{json.dumps(d1, indent=4)}"
+        result = json.dumps([
+            prompt.to_dict() for prompt in self.prompts
+        ], indent=2)
+        return result
 
     def log(self, msg: str) -> None:
         interactor_log.append(msg)
@@ -39,7 +55,7 @@ class Interactor:
         return thread, result
 
     def communicate(self) -> list[Any]:
-        msg = self.to_json()
+        msg = self.to_json() if not Config.DEBUGGING else self.to_console()
         _, result = self.ask(msg)
         while True:
             time.sleep(0.1)

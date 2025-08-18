@@ -1,4 +1,18 @@
 from typing import Any, Literal, TypedDict
+def is_same_dict_type(dict1: dict, dict_type: type) -> bool:
+    """
+    Checks if dict1 matches the structure and types defined in dict_type (TypedDict).
+    """
+    if not isinstance(dict1, dict):
+        return False
+    if not hasattr(dict_type, '__annotations__'):
+        return False
+    for key, expected_type in dict_type.__annotations__.items():
+        if key not in dict1:
+            return False
+        if not isinstance(dict1[key], expected_type):
+            return False
+    return True
 
 PaiDictType = TypedDict('PaiDictType', {
     "name": str

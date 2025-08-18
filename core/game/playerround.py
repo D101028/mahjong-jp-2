@@ -604,7 +604,7 @@ class YoninPlayerRound:
                 'chi': []
             }
             for ans, prompt in zip(answers, prompts):
-                choice = prompt.intent.content[int(ans)]
+                choice = prompt.intent.content['choices'][int(ans)]
                 if choice != 'cancel':
                     if sorted_results.get(choice) is None:
                         raise ValueError(f"Unknown answer to prompt {prompt.to_dict()}: {choice}")
