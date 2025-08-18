@@ -93,6 +93,24 @@ class Intent:
         ], 
         content: AskToChoicesContentType) -> None:
         ...
+    @overload
+    def __init__(
+        self, 
+        response_type: Literal['standard'], 
+        purpose: Literal[
+            "ask-to-choose-minpai-comb-content-type"
+        ], 
+        content: AskToChooseMinpaiCombContentType) -> None:
+        ...
+    @overload
+    def __init__(
+        self, 
+        response_type: Literal['standard'], 
+        purpose: Literal[
+            "ask-to-play-riichi-content-type"
+        ], 
+        content: AskToPlayRiichiContentType) -> None:
+        ...
 
     def __init__(
             self, 

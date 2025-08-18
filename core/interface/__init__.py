@@ -13,6 +13,9 @@ Intent purpose 對應 content 及 response 格式：
 - ask-to-choices: {
     "choices": list[Any] # 如吃、碰、槓、和等
   }; int
+- ask-to-choose-minpai-comb-content-type: {
+    "pai-comb-list": list[Any] # 如吃、碰、槓、和等
+  }; int
 """
 from .intent import *
 from .prompt import *

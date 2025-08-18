@@ -40,6 +40,7 @@ class Pai:
         return self._is_akadora
     @property
     def name(self) -> str:
+        """return name with akadora info"""
         if self.is_akadora:
             return f"0{self.type}"
         return f"{self.number}{self.type}"
@@ -181,6 +182,22 @@ class Pai:
         return {
             "name": self.name
         }
+
+def strict_pick_pais_with_loose_equal(pai_list: list[Pai], pai: Pai) -> list[Pai]:
+    result: list[Pai] = []
+    for p in pai_list:
+        if pai == p and all((not p2.equal(p)) for p2 in result):
+            result.append(p)
+    return result
+
+def strict_remove(pai_list: list[Pai], pai: Pai) -> None:
+    """raise Value error if pai is strictly not in pai_list"""
+    for idx, p in enumerate(pai_list):
+        if pai.equal(p, True):
+            pai_list.pop(idx)
+            return 
+    else:
+        raise ValueError(f"pai: {pai} not found in pai_list")
 
 yaochuu_list = [Pai(p) for p in support.yaochuu_paitype_tuple]
 ryuuiisoopai_list = [Pai(p) for p in support.ryuuiisoopai_paitype_tuple]
@@ -590,6 +607,14 @@ def is_agari(pai_list: list[Pai]) -> bool:
 
     return False
 
+def is_tenpai(pai_list: list[Pai]) -> bool:
+    """檢查是否聽牌 可傳入 1 4 7 10 13 張"""
+    for i in INDEX_WITHOUT_AKADORA:
+        pai = Pai(i)
+        if is_agari(pai_list + [pai]):
+            return True
+    return False
+
 def create_mentsu_list(pai_list: list[Pai], first_koutsu_deny: bool = False)  -> list[list[Mentsu]]:
     """分割去除對子之胡牌組合 可傳入 0 3 6 9 12 張，input 必須已排序"""
     if len(pai_list) == 0:
@@ -737,6 +762,9 @@ class Tehai:
     def sort(self) -> None:
         self.pai_list.sort(key = lambda p: p.int_sign())
     
+    def is_tenpai(self) -> bool:
+        return is_tenpai(self.pai_list)
+
     def get_tenpais(self) -> list[Pai]:
         return get_tenpai_list(self.pai_list)
 
@@ -891,7 +919,9 @@ class Tehai:
             return True
         return False
 
-    def is_able_to_ron(self, pai: Pai, param: 'Param'):
+    def is_able_to_ron(self, pai: Pai, param: 'Param') -> bool:
+        if not is_agari(self.pai_list + [pai]):
+            return False
         agari_result_list = get_agari_result_list(self, pai, param)
         return len(agari_result_list) != 0
 
@@ -905,12 +935,11 @@ class Param:
                  remaining_pai_num: int, 
                  menfon: int, 
                  chanfon: int, 
-                 is_rinshanpai_agari: bool, 
+                 is_rinshankaihou: bool, 
                  dora_pointers: list[Pai], 
-                 uradora_pointers: list[Pai] | None = None) -> None:
-        if agari_type not in ("ron", "tsumo"):
-            raise ValueError("agari_type must be 'ron' or 'tsumo'")
-        
+                 uradora_pointers: list[Pai] | None, 
+                 is_kanhuri: bool, 
+                 is_tsubamegaeshi: bool) -> None:
         self.riichi_junme = riichi_junme # 打出立直牌後的巡目
         self.agari_junme = agari_junme
         self.agari_type: Literal["ron", "tsumo"] = agari_type
@@ -919,9 +948,12 @@ class Param:
         self.remaining_pai_num = remaining_pai_num
         self.menfon = menfon
         self.chanfon = chanfon
-        self.is_rinshanpai_agari = is_rinshanpai_agari
+        self.is_rinshankaihou = is_rinshankaihou
         self.dora_pointers = dora_pointers
         self.uradora_pointers = uradora_pointers if uradora_pointers is not None else []
+        
+        self.is_kanfuri = is_kanhuri # 槓振
+        self.is_tsubamegaeshi = is_tsubamegaeshi # 燕返
 
 class Han:
     """將計入最終飜數的飜種 (含役、寶牌)"""
@@ -1295,7 +1327,7 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
                         result.append(token_yaku_dict[tokens.chuurenpouton])
 
     # 嶺上開花
-    if param.agari_type == 'tsumo' and param.is_rinshanpai_agari:
+    if param.agari_type == 'tsumo' and param.is_rinshankaihou:
         result.append(token_yaku_dict[tokens.rinshankaihou])
 
     # 七對子

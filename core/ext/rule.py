@@ -20,6 +20,8 @@ class BaseRules:
 
     atamahane_enabled = False # 啟用截胡（頭跳ね）
 
+    is_nagashimankan_hoora = False # 啟用時，流局滿貫計為胡牌，否則為流局
+
 class YoninRules: # 四人規則
 
     initial_tensuu = 25000 # 玩家起始點數

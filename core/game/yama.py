@@ -11,25 +11,32 @@ from core.types import *
 class DoraHyouji:
     def __init__(self, hyouji_pai_list: list[Pai]) -> None:
         self.current_hyouji_suu: int = 1
-        self.dora_hyouji_list: list[Pai] = []
-        self.ura_hyouji_list: list[Pai] = []
+        self._dora_hyouji_list: list[Pai] = []
+        self._ura_hyouji_list: list[Pai] = []
         for idx, p in enumerate(reversed(hyouji_pai_list)):
             if idx % 2:
-                self.dora_hyouji_list.append(p)
+                self._dora_hyouji_list.append(p)
             else:
-                self.ura_hyouji_list.append(p)
+                self._ura_hyouji_list.append(p)
     
     def get_dora_hyoujis(self) -> list[Pai]:
-        return self.dora_hyouji_list[:self.current_hyouji_suu]
+        return self._dora_hyouji_list[:self.current_hyouji_suu]
     
     def get_ura_hyoujis(self) -> list[Pai]:
-        return self.ura_hyouji_list[:self.current_hyouji_suu]
+        return self._ura_hyouji_list[:self.current_hyouji_suu]
 
     def flop(self) -> Pai:
-        if self.current_hyouji_suu + 1 >= len(self.dora_hyouji_list):
+        if self.current_hyouji_suu + 1 >= len(self._dora_hyouji_list):
             raise Exception("there is no more dora_hyoujihai can be flopped")
         self.current_hyouji_suu += 1
-        return self.dora_hyouji_list[self.current_hyouji_suu - 1]
+        return self._dora_hyouji_list[self.current_hyouji_suu - 1]
+
+    def to_dict(self, show_ura = False) -> HyoujihaiInfoDictType:
+        return {
+            'dora-hyouji-list': [pai.to_dict() for pai in self.get_dora_hyoujis()], 
+            'uradora-hyouoji-list': 
+            [pai.to_dict() for pai in self.get_ura_hyoujis()] if show_ura else None
+        }
 
 class YamaChain:
     def __init__(self, pai_index_list: Iterable[str], rinshansuu: int, dora_hyoujisuu: int) -> None:

@@ -33,7 +33,7 @@ PlayerTehaiUpdateNotationContentType = TypedDict('PlayerTehaiUpdateNotationConte
 PlayerDatsuhaiNotationContentType = TypedDict('PlayerDatsuhaiNotationContentType', {
     "player-id": int, 
     "datsuhai": PaiDictType, 
-    "is-riichi": bool
+    "to-riichi": bool
 }) # Response: None
 PlayerMinpaiNotationContentType = TypedDict('PlayerMinpaiNotationContentType', {
     "player-id": int, 
@@ -57,12 +57,19 @@ HyoujihaiUpdateNotationContentType = TypedDict('HyoujihaiUpdateNotationContentTy
     "hyoujihai-info": HyoujihaiInfoDictType
 }) # Response: None
 AskToDatsuhaiContentType = TypedDict('AskToDatsuhaiContentType', {
-    "datsuhai-choices": list[int]
+    "datsuhai-choices": list[int | None] | list[int] # None 表示摸切
 }) # Response: int
 AskToDatsuhaiOrOtherChoicesContentType = TypedDict('AskToDatsuhaiOrOtherChoicesContentType', {
-    "datsuhai-choices": list[int], 
-    "other-choices": list[Literal['ankan', 'kakan', 'penuki', 'tsumo', 'cancel']]
+    "datsuhai-choices": list[int | None] | list[int],  # None 表示摸切
+    "other-choices": list[Literal['ankan', 'kakan', 'penuki', 'tsumo', 'kyuushukyuhai', 'riichi', 'cancel']]
 }) # Response: int
 AskToChoicesContentType = TypedDict('AskToChoicesContentType', {
     "choices": list[Literal['chi', 'pon', 'minkan', 'ron', 'cancel']]
 }) # Response: int
+AskToChooseMinpaiCombContentType = TypedDict('AskToChooseMinpaiCombContentType', {
+    "pai-comb-list": list[list[PaiDictType]]
+}) # Response: int
+AskToPlayRiichiContentType = TypedDict('AskToPlayRiichiContentType', {
+    "datsuhai-choices": list[int | None] | list[int], 
+    "choices": list[Literal['cancel']]
+})
