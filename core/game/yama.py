@@ -2,7 +2,7 @@ import random
 from typing import Iterable
 
 from core.pai import Pai
-from core.player import Player, players_dict
+from core.player import Player, players_dict, get_ordered_players
 from core.ext import support
 from core.ext.index import *
 from core.ext.rule import BaseRules, YoninRules, SanninRules
@@ -56,20 +56,9 @@ class YamaChain:
     def deal(self, players_dict: dict[int, Player] = players_dict) -> None:
         """發牌"""
         # 按照風位取得 player 順序列表
-        players: list[Player] = []
-        player_num: int
-        for idx, token in enumerate(support.fonwei_tuple):
-            player = players_dict.get(token)
-            if player is None:
-                if idx == len(support.fonwei_tuple) - 1:
-                    player_num = len(support.fonwei_tuple) - 1
-                    break
-                else:
-                    raise Exception(f"Could not get some players from players_dict: {players_dict}")
-            else:
-                players.append(player)
-        else:
-            player_num = len(support.fonwei_tuple)
+        first_player = players_dict[support.fonwei_tuple[0]]
+        players: list[Player] = [first_player] + get_ordered_players(first_player)
+        player_num: int = len(players)
         
         # 擷取預計會抓的牌
         pais = self.normal_list[:13 * player_num]
@@ -80,9 +69,8 @@ class YamaChain:
             for player in players:
                 player.tehai.pai_list += pais[-4:]
                 pais = pais[:-4]
-        for _ in range(3):
-            for player in players:
-                player.tehai.pai_list.append(pais.pop())
+        for player in players:
+            player.tehai.pai_list.append(pais.pop())
 
     def draw(self) -> Pai:
         """摸牌"""

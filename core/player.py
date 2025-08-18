@@ -31,6 +31,7 @@ def get_ordered_players(player: 'Player') -> list['Player']:
     temp_player = player.next()
     while temp_player != player:
         result.append(temp_player)
+        temp_player = temp_player.next()
     return result
 
 class Player:
@@ -65,6 +66,9 @@ class Player:
             return False
         else:
             return self.ID == other.ID
+
+    def __str__(self) -> str:
+        return f"<Player ID={self.ID} name={self.name} menfon={self.menfon}>"
 
     @property
     def is_riichi(self) -> bool:
