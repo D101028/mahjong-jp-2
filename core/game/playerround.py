@@ -594,7 +594,7 @@ class YoninPlayerRound:
         # 播送並執行鳴牌、胡牌
         if prompts:
             interactor = Interactor(prompts)
-            results = interactor.communicate()
+            answers = interactor.communicate()
             # choose the action with highest priority
             # ron > minkan > pon > chi; 三家和 => 流局 or 截胡規則
             sorted_results: dict[str, list[Player]] = {
@@ -603,8 +603,8 @@ class YoninPlayerRound:
                 'pon': [], 
                 'chi': []
             }
-            for result, prompt in zip(results, prompts):
-                choice = prompt.intent.content[int(result)]
+            for ans, prompt in zip(answers, prompts):
+                choice = prompt.intent.content[int(ans)]
                 if choice != 'cancel':
                     if sorted_results.get(choice) is None:
                         raise ValueError(f"Unknown answer to prompt {prompt.to_dict()}: {choice}")
