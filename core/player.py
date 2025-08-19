@@ -34,8 +34,15 @@ def get_ordered_players(player: 'Player') -> list['Player']:
         temp_player = temp_player.next()
     return result
 
+class PlayerConfig:
+    def __init__(
+        self, 
+        auto_sort_enabled: bool = True
+    ) -> None:
+        self.auto_sort_enabled = auto_sort_enabled
+
 class Player:
-    def __init__(self, ID: int, name: str, tensuu: int, menfon: int) -> None:
+    def __init__(self, ID: int, name: str, tensuu: int, menfon: int, config: PlayerConfig = PlayerConfig()) -> None:
         if menfon not in support.fonwei_tuple:
             raise ValueError(f"Unknown menfon: {menfon}")
 
@@ -45,6 +52,8 @@ class Player:
         self.menfon: int = menfon # tokens.ton, tokens.nan, tokens.shaa, (tokens.pei)
         self.tehai: Tehai = Tehai([])
         self.river: River = River()
+
+        self.config = config
 
         self.riichi_junme: int | None = None # 打出立直牌後的巡目
         self.player_junme: int = 0
@@ -108,6 +117,9 @@ class Player:
         # 振聽處理
         self.doujin_furiten_pais.clear()
         self.datsu_furiten_pais.add(pai)
+        # 理牌
+        if self.config.auto_sort_enabled:
+            self.tehai.sort()
         return pai
 
     def previous(self) -> 'Player':

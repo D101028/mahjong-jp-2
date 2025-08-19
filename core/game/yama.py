@@ -71,6 +71,11 @@ class YamaChain:
                 pais = pais[:-4]
         for player in players:
             player.tehai.pai_list.append(pais.pop())
+        
+        # 理牌
+        for player in players:
+            if player.config.auto_sort_enabled:
+                player.tehai.sort()
 
     def draw(self) -> Pai:
         """摸牌"""
