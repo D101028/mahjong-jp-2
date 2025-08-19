@@ -103,11 +103,11 @@ class Pai:
         if self.type == support.token_paitype_dict[tokens.zuu]:
             if self.number >= 7 and not allow_mod:
                 return None
-            return Pai(str((self.number) % 7 + 1) + self.type)
+            return Pai(f"{self.number + 1}{self.type}" if self.number != 7 else f"1{self.type}")
         else:
             if self.number >= 9 and not allow_mod:
                 return None
-            return Pai(str((self.number) % 9 + 1) + self.type)
+            return Pai(f"{self.number + 1}{self.type}" if self.number != 9 else f"1{self.type}")
     
     @overload
     def previous(self, allow_mod: Literal[False] = False) -> "Pai | None":
@@ -119,11 +119,11 @@ class Pai:
         if self.type == support.token_paitype_dict[tokens.zuu]:
             if self.number <= 1 and not allow_mod:
                 return None
-            return Pai(str((self.number - 1) % 7) + self.type)
+            return Pai(f"{self.number - 1}{self.type}" if self.number != 1 else f"7{self.type}")
         else:
             if self.number <= 1 and not allow_mod:
                 return None
-            return Pai(str((self.number - 1) % 10) + self.type)
+            return Pai(f"{self.number - 1}{self.type}" if self.number != 1 else f"9{self.type}")
 
     @overload
     def get_shuntsu(self, form: Literal['head'] = 'head') -> tuple['Pai', "Pai | None", "Pai | None"]:
