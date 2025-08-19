@@ -1563,7 +1563,7 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
             result.append(token_yaku_dict[tokens.chiniisoo])
     
     # 天地和
-    if param.agari_type == 'tsumo' and param.agari_junme == 0:
+    if param.agari_type == 'tsumo' and param.agari_junme == 0 and not param.is_junme_broken:
         # 天和
         if param.menfon == support.fonwei_tuple[0]:
             result.append(token_yaku_dict[tokens.tenhou])

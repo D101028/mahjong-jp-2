@@ -42,7 +42,7 @@ class Interactor:
         ])
 
     def to_console(self) -> str:
-        result = "\n---\n".join([str(prompt) for prompt in self.prompts])
+        result = "\n".join([str(prompt) for prompt in self.prompts])
         return f"======\n{result}"
 
     def log(self, msg: str) -> None:
@@ -69,7 +69,7 @@ class Interactor:
             ans = json.dumps([None for _ in range(len(self.prompts))])
         else:
             ans = DebugInput.pull()
-            print(f"Responses: {ans}")
+            print(f"\033[32mResponses: {ans}\033\033[0m")
         try:
             obj = json.loads(ans)
         except Exception as e:
