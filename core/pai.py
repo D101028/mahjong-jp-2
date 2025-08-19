@@ -680,67 +680,41 @@ def create_mentsu_comb_list(pai_list: list[Pai], first_koutsu_deny: bool = False
     """分割去除對子之胡牌組合 可傳入 0 3 6 9 12 張，pai_list 必須已排序"""
     if len(pai_list) == 0:
         return []
-    if pai_list.count(pai_list[0]) < 3:
-        # 沒刻子拔
+    if  pai_list.count(pai_list[0]) < 3 or first_koutsu_deny:
+        # 沒刻子拔 or 必須先拔順子
         copied_list = pai_list.copy()
         p, pp, ppp = copied_list[0].get_shuntsu()
-        if pp is not None and ppp is not None and pp in copied_list and ppp in copied_list:
-            mentsu = Mentsu(tokens.shuntsu, [p, pp, ppp])
-            copied_list.remove(p)
-            copied_list.remove(pp)
-            copied_list.remove(ppp)
-            if not copied_list:
-                return [[mentsu]]
-            sub_comb = create_mentsu_comb_list(copied_list)
-            if sub_comb:
-                return [[mentsu] + l for l in sub_comb]
-        return []
-    else:
-        if not first_koutsu_deny:
-            result: list[list[Mentsu]] = []
-            # 先拔刻子
-            copied_list = pai_list.copy()
-            p = copied_list[0]
-            mentsu = Mentsu(tokens.koutsu, [p, p, p])
-            copied_list.pop(0)
-            copied_list.pop(0)
-            copied_list.pop(0)
-            if not copied_list:
-                return [[mentsu]]
-            sub_comb = create_mentsu_comb_list(copied_list)
-            if sub_comb:
-                result += [[mentsu] + l for l in sub_comb]
-
-            # 再拔順子
-            copied_list = pai_list.copy()
-            p, pp, ppp = copied_list[0].get_shuntsu()
-            if pp is not None and ppp is not None and pp in copied_list and ppp in copied_list:
-                mentsu = Mentsu(tokens.shuntsu, [p, pp, ppp])
-                copied_list.remove(p)
-                copied_list.remove(pp)
-                copied_list.remove(ppp)
-                if not copied_list:
-                    return [[mentsu]]
-                sub_comb = create_mentsu_comb_list(copied_list, True) # 遞迴的第一張不能當刻子(前面拔過了，會撞)
-                if sub_comb:
-                    result += [[mentsu] + l for l in sub_comb]
-            return result
-        else:
-            # 第一張不能當刻子
-            # 拔順子
-            copied_list = pai_list.copy()
-            p, pp, ppp = copied_list[0].get_shuntsu()
-            if pp is not None and ppp is not None and pp in copied_list and ppp in copied_list:
-                mentsu = Mentsu(tokens.shuntsu, [p, pp, ppp])
-                copied_list.remove(p)
-                copied_list.remove(pp)
-                copied_list.remove(ppp)
-                if not copied_list:
-                    return [[mentsu]]
-                sub_comb = create_mentsu_comb_list(copied_list, True) # (True or False 都沒差了)(如果同種牌只有四張)
-                if sub_comb:
-                    return [[mentsu] + l for l in sub_comb]
+        if pp is None or ppp is None or pp not in copied_list or ppp not in copied_list:
             return []
+        mentsu = Mentsu(tokens.shuntsu, [p, pp, ppp])
+        copied_list.remove(p)
+        copied_list.remove(pp)
+        copied_list.remove(ppp)
+        if not copied_list:
+            return [[mentsu]]
+        sub_comb = create_mentsu_comb_list(copied_list, first_koutsu_deny)
+        if sub_comb:
+            return [[mentsu] + l for l in sub_comb]
+        else:
+            return []
+    else:
+        result: list[list[Mentsu]] = []
+        # 先拔刻子
+        copied_list = pai_list.copy()
+        p = copied_list[0]
+        mentsu = Mentsu(tokens.koutsu, [p, p, p])
+        copied_list.pop(0)
+        copied_list.pop(0)
+        copied_list.pop(0)
+        if not copied_list:
+            return [[mentsu]]
+        sub_comb = create_mentsu_comb_list(copied_list)
+        if sub_comb:
+            result += [[mentsu] + l for l in sub_comb]
+
+        # 再拔順子
+        result += create_mentsu_comb_list(pai_list, True)
+        return result
 
 def get_agari_comb_list(pai_list: list[Pai]) -> list[AgariComb]:
     """分割胡牌組合 可傳入 2 5 8 11 14 張"""
