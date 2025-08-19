@@ -1,4 +1,5 @@
 import json
+import sys
 import time
 from threading import Thread
 from typing import Any, Literal
@@ -12,6 +13,9 @@ class TerminalResponse:
         self.response = response
         self.is_ok = is_ok
 
+class DebugInputExit(Exception):
+    pass
+
 class DebugInput:
     responses: list[str] = []
     
@@ -22,7 +26,7 @@ class DebugInput:
     @classmethod
     def pull(cls) -> str:
         if not cls.responses:
-            raise Exception("Response not found")
+            raise DebugInputExit("Response not found")
         return cls.responses.pop(0)
 
 interactor_log: list[str] = []
