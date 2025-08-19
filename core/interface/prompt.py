@@ -1,6 +1,14 @@
+from typing import Any
 
-from core.player import Player
-from .intent import Intent
+from core.player import Player, id_players_dict
+from .intent import Intent, to_intent
+
+def to_prompt(dict1: dict[str, Any]):
+    target_id = dict1.get('target-id')
+    intent_dict = dict1.get('intent')
+    assert target_id is not None and intent_dict is not None
+    intent = to_intent(intent_dict)
+    return Prompt(id_players_dict[target_id], intent)
 
 class Prompt:
     def __init__(

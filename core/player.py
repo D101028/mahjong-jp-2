@@ -51,7 +51,6 @@ class Player:
         self.is_junme_broken: bool = False
 
         self.doujin_furiten_pais: set[Pai] = set() # 保存會同巡振聽的牌，玩家打出牌後清空
-        # self.riichi_furiten_pais: set[Pai] = set() # 保存會立直振聽的牌
         self.datsu_furiten_pais: set[Pai] = set()  # 保存所有打出過的牌
         self.is_riichi_furiten: bool = False
 
@@ -74,12 +73,13 @@ class Player:
     def is_riichi(self) -> bool:
         return self.riichi_junme is not None
 
-    def draw(self, yama: 'YamaType') -> None:
+    def draw(self, yama: 'YamaType') -> Pai:
         """從 yama 摸牌"""
         if self.tehai.new_pai is not None:
             raise Exception("there already exists a pai in the tehai")
         p = yama.draw()
         self.tehai.new_pai = p
+        return p
 
     def datsuhai(self, pos: int | None = None, to_riichi: bool = False) -> Pai:
         """從 tehai 打牌"""

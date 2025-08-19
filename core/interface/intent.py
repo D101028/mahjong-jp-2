@@ -2,6 +2,13 @@ from typing import Any, Literal, overload
 
 from core.types import *
 
+def to_intent(dict1: dict[str, Any]):
+    response_type = dict1.get('response-type')
+    purpose = dict1.get('purpose')
+    content = dict1.get('content')
+    assert response_type is not None and purpose is not None and content is not None
+    return Intent(response_type, purpose, content)
+
 class Intent:
     @overload
     def __init__(

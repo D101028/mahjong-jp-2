@@ -68,7 +68,9 @@ class RoundResult:
         self.ron_from_player = ron_from_player
         self.tsumo_player_result = tsumo_player_result
         self.kyuushukyuhai_player = kyuushukyuhai_player
-
+    
+    def __str__(self) -> str:
+        return f'<RoundResult type={self.type}>'
 
 class SupportsEqual(Protocol):
     def equal(self, other: Any, /, *args, **kwargs) -> bool:
@@ -114,8 +116,7 @@ class YoninPlayerRound:
         self.prparam = prparam
     
     def draw(self, player: Player) -> Pai:
-        pai = self.yama.draw()
-        player.tehai.new_pai = pai
+        pai = player.draw(self.yama)
         Interactor([Prompt(player, Intent('no-response', 'player-tehai-update-notation', {
             'tehai-info': player.tehai.to_dict()
         }))]).communicate()
@@ -885,7 +886,7 @@ class YoninPlayerRound:
             pai = self.player.datsuhai(len(self.player.tehai.pai_list)-1)
         else:
             pai = self.player.datsuhai()
-        
+        print(f"Player datsuhai: {pai}")
         next_player = self.player.next()
         
         # 判斷四風連打

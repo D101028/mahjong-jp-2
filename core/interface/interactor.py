@@ -23,14 +23,6 @@ class Interactor:
         ])
 
     def to_console(self) -> str:
-        # result = ""
-        # for prompt in self.prompts:
-        #     d1 = prompt.intent.to_dict()
-        #     for key, value in prompt.intent.content.items():
-        #         if isinstance(value, (list, tuple)) and is_same_dict_type(value[0], PaiDictType):
-        #             d1['content'][key] = " ".join(value)
-            
-        #     result = f"{result}\n{json.dumps(d1, indent=4)}"
         result = json.dumps([
             prompt.to_dict() for prompt in self.prompts
         ], indent=2)
@@ -56,15 +48,18 @@ class Interactor:
 
     def communicate(self) -> list[Any]:
         msg = self.to_json() if not Config.DEBUGGING else self.to_console()
-        _, result = self.ask(msg)
         while True:
-            time.sleep(0.1)
-            if result.is_ok:
-                ans = result.response
-                try:
-                    obj = json.loads(ans)
-                except Exception as e:
-                    return self.communicate()
-                if not isinstance(obj, list) or len(obj) != len(self.prompts):
-                    return self.communicate()
-                return obj
+            _, result = self.ask(msg)
+            while True:
+                time.sleep(0.1)
+                if result.is_ok:
+                    ans = result.response
+                    try:
+                        obj = json.loads(ans)
+                    except Exception as e:
+                        _, result = self.ask("again")
+                        continue
+                    if not isinstance(obj, list) or len(obj) != len(self.prompts):
+                        _, result = self.ask("again")
+                        continue
+                    return obj
