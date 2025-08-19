@@ -464,10 +464,10 @@ class YoninPlayerRound:
             if chyankan_players:
                 answers = Interactor([Prompt(plyer, Intent('standard', 'ask-to-choices', {
                     'choices': ['ron', 'cancel']
-                })) for plyer in ordered_players]).communicate()
+                })) for plyer in chyankan_players]).communicate()
                 ron_players: list[Player] = []
                 for idx, ans in enumerate(answers):
-                    plyer = ordered_players[idx]
+                    plyer = chyankan_players[idx]
                     pos = int(ans)
                     if pos == 1: # choose 'cancel'
                         # 振聽處理
