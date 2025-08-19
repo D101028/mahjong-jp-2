@@ -6,16 +6,17 @@
 
 from collections import OrderedDict
 from itertools import combinations_with_replacement
-from typing import Literal, Iterable, Protocol, Any
+from typing import Literal, Iterable
 
 from core.ext import tokens, support
 from core.ext.rule import BaseRules
+from core.game.yama import YoninYama
+from core.interface import Intent, Prompt, Interactor
 from core.pai import Param, Pai, FuroType, BasicFuro, Minkan, Ankan, Kakan, Tehai, \
                      get_agari_result_list, AgariResult, is_agari, is_tenpai, \
                      get_kuikae_list, strict_pick_pais_with_loose_equal, strict_remove
 from core.player import Player, players_dict, id_players_dict, get_ordered_players
-from core.game.yama import YoninYama
-from core.interface import Intent, Prompt, Interactor
+from core.types import *
 
 class MotionTokens:
     motion_tsumo_normal: int = 1
@@ -71,10 +72,6 @@ class RoundResult:
     
     def __str__(self) -> str:
         return f'<RoundResult type={self.type}>'
-
-class SupportsEqual(Protocol):
-    def equal(self, other: Any, /, *args, **kwargs) -> bool:
-        ...
 
 def is_included(iter1: Iterable[SupportsEqual], iter2: Iterable[SupportsEqual]) -> bool:
     """return True if iter1 is included in iter2"""
@@ -560,7 +557,7 @@ class YoninPlayerRound:
         is_last_player_round = remaining == 0
         if not is_last_player_round and not suukansanra_satisfied and next_player.tehai.is_able_to_chi(pai):
             player_actions_dict[next_player].append('chi')
-        for player in players_dict.values():
+        for player in player_actions_dict:
             if not is_last_player_round and not suukansanra_satisfied:
                 if player.tehai.is_able_to_pon(pai):
                     player_actions_dict[player].append('pon')
@@ -726,7 +723,15 @@ class YoninPlayerRound:
         if pos1 >= len(datsuhai_choices):
             return self.ask_and_execute(original_choices)
         else:
-            pai = self.player.datsuhai(datsuhai_choices[pos1], True)
+            pai = self.player.datsuhai(datsuhai_choices[pos1], to_riichi=True)
+            # 播送
+            Interactor([Prompt(self.player, Intent('no-response', 'player-tehai-update-notation', {
+                'tehai-info': self.player.tehai.to_dict()
+            }))] + [Prompt(plyer, Intent('no-response', 'player-datsuhai-notation', {
+                'player-id': self.player.ID, 
+                'datsuhai': pai.to_dict(), 
+                'to-riichi': True
+            })) for plyer in players_dict.values()]).communicate()
             return self.datsuhai_after(pai, True)
 
     def ask_and_execute(self, choices: list[Literal['ankan', 'kakan', 'penuki', 'tsumo', 'kyuushukyuhai', 'riichi', 'cancel']]) -> "YoninPlayerRound | RoundResult":
@@ -736,6 +741,7 @@ class YoninPlayerRound:
         }))]).communicate()[0]
         pos = int(ans)
         if pos >= len(self.player.tehai.pai_list) + 1:
+            pos -= len(self.player.tehai.pai_list) + 1
             # 執行
             choice = choices[pos]
             match choice:

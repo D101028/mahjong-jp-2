@@ -12,7 +12,22 @@ class TerminalResponse:
         self.response = response
         self.is_ok = is_ok
 
+class DebugInput:
+    responses: list[str] = []
+    
+    @classmethod
+    def push(cls, *contents: str) -> None:
+        cls.responses += contents
+    
+    @classmethod
+    def pull(cls) -> str:
+        if not cls.responses:
+            raise Exception("Response not found")
+        return cls.responses.pop(0)
+
 interactor_log: list[str] = []
+response_log: list[str] = []
+
 class Interactor:
     def __init__(self, prompts: list[Prompt]) -> None:
         self.prompts: list[Prompt] = prompts
@@ -23,10 +38,8 @@ class Interactor:
         ])
 
     def to_console(self) -> str:
-        result = json.dumps([
-            prompt.to_dict() for prompt in self.prompts
-        ], indent=2)
-        return result
+        result = "\n---\n".join([str(prompt) for prompt in self.prompts])
+        return f"======\n{result}"
 
     def log(self, msg: str) -> None:
         interactor_log.append(msg)
@@ -46,20 +59,37 @@ class Interactor:
         thread.start()
         return thread, result
 
+    def debug_communicate(self) -> list[Any]:
+        print(self.to_console())
+        if all(prompt.intent.response_type == 'no-response' for prompt in self.prompts):
+            ans = json.dumps([None for _ in range(len(self.prompts))])
+        else:
+            ans = DebugInput.pull()
+            print(f"Responses: {ans}")
+        try:
+            obj = json.loads(ans)
+        except Exception as e:
+            raise Exception(f"Unknown ans: {ans}")
+        if not isinstance(obj, list) or len(obj) != len(self.prompts):
+            raise Exception(f"Unknown ans: {ans}")
+        return obj
+
     def communicate(self) -> list[Any]:
-        msg = self.to_json() if not Config.DEBUGGING else self.to_console()
+        if Config.DEBUGGING:
+            return self.debug_communicate()
+        msg = self.to_json()
+        _, result = self.ask(msg)
         while True:
-            _, result = self.ask(msg)
-            while True:
-                time.sleep(0.1)
-                if result.is_ok:
-                    ans = result.response
-                    try:
-                        obj = json.loads(ans)
-                    except Exception as e:
-                        _, result = self.ask("again")
-                        continue
-                    if not isinstance(obj, list) or len(obj) != len(self.prompts):
-                        _, result = self.ask("again")
-                        continue
-                    return obj
+            if result.is_ok:
+                ans = result.response
+                response_log.append(ans)
+                try:
+                    obj = json.loads(ans)
+                except Exception as e:
+                    _, result = self.ask("again")
+                    continue
+                if not isinstance(obj, list) or len(obj) != len(self.prompts):
+                    _, result = self.ask("again")
+                    continue
+                return obj
+            time.sleep(0.1)

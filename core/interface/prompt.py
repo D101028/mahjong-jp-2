@@ -19,6 +19,9 @@ class Prompt:
         self.target_player: Player = target_player
         self.intent: Intent = intent
 
+    def __str__(self) -> str:
+        return f"{self.intent}. To {self.target_player}"
+
     def to_dict(self):
         return {
             "target-id": self.target_player.ID, 

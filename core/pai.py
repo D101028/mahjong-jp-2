@@ -802,10 +802,15 @@ class Tehai:
             raise ValueError(f"arg should be a string, list of Pai or string, or TehaiDictType like dictionary, not {type(arg).__name__}")
 
     def __str__(self) -> str:
-        output = ""
-        output += " ".join([p.__str__() for p in self.pai_list])
-        output += " | "
-        output += " ".join([f.__str__() for f in self.furo_list])
+        output = " ".join([p.name for p in self.pai_list])
+        if self.new_pai:
+            output += f" | {self.new_pai.name}"
+        else:
+            output += f" | None"
+        if self.furo_list:
+            output += " ".join([f.__str__() for f in self.furo_list])
+        if self.penuki_list:
+            output += " ".join([p.name for p in self.penuki_list])
         return output
 
     def to_dict(self) -> TehaiDictType:

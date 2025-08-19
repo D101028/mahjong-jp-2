@@ -129,6 +129,13 @@ class Intent:
         self.purpose = purpose
         self.content = content
 
+    def __str__(self) -> str:
+        from core.pai import Tehai
+        if 'tehai-info' in self.content:
+            tehai = Tehai(self.content['tehai-info'])
+            return f"<Intent tehai {tehai}>"
+        return f"<Intent type={self.response_type} purpose={self.purpose} content={self.content}>"
+
     def to_dict(self):
         return {
             "response-type": self.response_type, 

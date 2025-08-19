@@ -67,7 +67,7 @@ class Player:
             return self.ID == other.ID
 
     def __str__(self) -> str:
-        return f"<Player ID={self.ID} name={self.name} menfon={self.menfon}>"
+        return f"<Player ID={self.ID} name={self.name}>"
 
     @property
     def is_riichi(self) -> bool:

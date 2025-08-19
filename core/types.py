@@ -1,4 +1,8 @@
-from typing import Any, Literal, TypedDict
+from typing import Any, Literal, TypedDict, Protocol
+
+class SupportsEqual(Protocol):
+    def equal(self, other: Any, /, *args, **kwargs) -> bool:
+        ...
 
 def is_same_dict_type(dict1: Any, dict_type: type) -> bool:
     """
@@ -11,8 +15,8 @@ def is_same_dict_type(dict1: Any, dict_type: type) -> bool:
     for key, expected_type in dict_type.__annotations__.items():
         if key not in dict1:
             return False
-        if not isinstance(dict1[key], expected_type):
-            return False
+        # if not isinstance(dict1[key], expected_type):
+        #     return False
     return True
 
 PaiDictType = TypedDict('PaiDictType', {
