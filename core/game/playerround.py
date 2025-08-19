@@ -352,36 +352,37 @@ class YoninPlayerRound:
                 False, False
             )):
                 chyankan_players.append(plyer)
-        answers = Interactor([Prompt(plyer, Intent('standard', 'ask-to-choices', {
-            'choices': ['ron', 'cancel']
-        })) for plyer in chyankan_players]).communicate()
-        ron_players: list[Player] = []
-        for idx, ans in enumerate(answers):
-            plyer = chyankan_players[idx]
-            pos = int(ans)
-            if pos == 1: # choose 'cancel'
-                # 振聽處理
-                plyer.doujin_furiten_pais.add(pai) # 同巡振聽
-                if plyer.is_riichi:
-                    plyer.is_riichi_furiten = True # 立直振聽
-            else: # choose 'ron'
-                ron_players.append(plyer)
-        if ron_players:
-            if len(ron_players) == 3 and BaseRules.atamahane_enabled:
-                roundresult = RoundResult(RoundResultTokens.sanchahoo_ryuukyoku)
-                return roundresult
-            if BaseRules.atamahane_enabled:
-                ron_players = ron_players[:1]
-            players_args: list[tuple[Player, Param]] = []
-            for ron_player in ron_players:
-                players_args.append((ron_player, Param(
-                    ron_player.riichi_junme, ron_player.player_junme, 'ron', 
-                    ron_player.is_junme_broken, True, self.yama.get_remaining(), 
-                    ron_player.menfon, self.chanfon, False, 
-                    self.yama.dora_hyouji.get_dora_hyoujis(), self.yama.dora_hyouji.get_ura_hyoujis(), 
-                    False, False
-                )))
-            return self.ron(players_args, self.player, pai)
+        if chyankan_players:
+            answers = Interactor([Prompt(plyer, Intent('standard', 'ask-to-choices', {
+                'choices': ['ron', 'cancel']
+            })) for plyer in chyankan_players]).communicate()
+            ron_players: list[Player] = []
+            for idx, ans in enumerate(answers):
+                plyer = chyankan_players[idx]
+                pos = int(ans)
+                if pos == 1: # choose 'cancel'
+                    # 振聽處理
+                    plyer.doujin_furiten_pais.add(pai) # 同巡振聽
+                    if plyer.is_riichi:
+                        plyer.is_riichi_furiten = True # 立直振聽
+                else: # choose 'ron'
+                    ron_players.append(plyer)
+            if ron_players:
+                if len(ron_players) == 3 and BaseRules.atamahane_enabled:
+                    roundresult = RoundResult(RoundResultTokens.sanchahoo_ryuukyoku)
+                    return roundresult
+                if BaseRules.atamahane_enabled:
+                    ron_players = ron_players[:1]
+                players_args: list[tuple[Player, Param]] = []
+                for ron_player in ron_players:
+                    players_args.append((ron_player, Param(
+                        ron_player.riichi_junme, ron_player.player_junme, 'ron', 
+                        ron_player.is_junme_broken, True, self.yama.get_remaining(), 
+                        ron_player.menfon, self.chanfon, False, 
+                        self.yama.dora_hyouji.get_dora_hyoujis(), self.yama.dora_hyouji.get_ura_hyoujis(), 
+                        False, False
+                    )))
+                return self.ron(players_args, self.player, pai)
         
         # 若上輪有明加槓，翻指示牌
         if self.prparam.player_last_motion in (MotionTokens.motion_minkan_rinshan, MotionTokens.motion_kakan_rinshan):
