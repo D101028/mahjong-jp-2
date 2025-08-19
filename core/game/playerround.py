@@ -175,10 +175,10 @@ class YoninPlayerRound:
             pre1_list = strict_pick_pais_with_loose_equal(player.tehai.pai_list, pre1)
             pre2_list = strict_pick_pais_with_loose_equal(player.tehai.pai_list, pre2)
             choices += [(p2, p1) for p2 in pre2_list for p1 in pre1_list]
-        if pre2 is not None and next1 is not None:
-            pre2_list = strict_pick_pais_with_loose_equal(player.tehai.pai_list, pre2)
+        if pre1 is not None and next1 is not None:
+            pre1_list = strict_pick_pais_with_loose_equal(player.tehai.pai_list, pre1)
             next1_list = strict_pick_pais_with_loose_equal(player.tehai.pai_list, next1)
-            choices += [(p1, p2) for p2 in pre2_list for p1 in next1_list]
+            choices += [(p1, p2) for p1 in pre1_list for p2 in next1_list]
         if next1 is not None and next2 is not None:
             next1_list = strict_pick_pais_with_loose_equal(player.tehai.pai_list, next1)
             next2_list = strict_pick_pais_with_loose_equal(player.tehai.pai_list, next2)
@@ -629,7 +629,7 @@ class YoninPlayerRound:
                 for ron_player in ordered_ron_players:
                     players_args.append((ron_player, Param(
                         ron_player.riichi_junme, ron_player.player_junme, 'ron', 
-                        ron_player.is_junme_broken, True, self.yama.get_remaining(), 
+                        ron_player.is_junme_broken, False, self.yama.get_remaining(), 
                         ron_player.menfon, self.chanfon, False, 
                         self.yama.dora_hyouji.get_dora_hyoujis(), self.yama.dora_hyouji.get_ura_hyoujis(), 
                         False, False
@@ -735,15 +735,15 @@ class YoninPlayerRound:
             return self.datsuhai_after(pai, True)
 
     def ask_and_execute(self, choices: list[Literal['ankan', 'kakan', 'penuki', 'tsumo', 'kyuushukyuhai', 'riichi', 'cancel']]) -> "YoninPlayerRound | RoundResult":
+        datsuhai_choices = [i for i in range(len(self.player.tehai.pai_list))] + [None]
         ans = Interactor([Prompt(self.player, Intent('standard', 'ask-to-datsuhai-or-other-choices', {
-            'datsuhai-choices': [i for i in range(len(self.player.tehai.pai_list))] + [None], 
+            'datsuhai-choices': datsuhai_choices, 
             'other-choices': choices
         }))]).communicate()[0]
         pos = int(ans)
-        if pos >= len(self.player.tehai.pai_list) + 1:
-            pos -= len(self.player.tehai.pai_list) + 1
+        choice = (datsuhai_choices + choices)[pos]
+        if isinstance(choice, str):
             # 執行
-            choice = choices[pos]
             match choice:
                 case 'cancel':
                     pai = self.ask_and_datsuhai()
@@ -869,7 +869,7 @@ class YoninPlayerRound:
                 if count >= 9:
                     choices.append('kyuushukyuhai')
             ## 判斷立直
-            if self.player.is_able_to_riichi():
+            if self.yama.get_remaining() >= len(players_dict) and self.player.is_able_to_riichi():
                 choices.append('riichi')
             ## 詢問/執行
             if choices:

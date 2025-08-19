@@ -103,11 +103,11 @@ class Pai:
         if self.type == support.token_paitype_dict[tokens.zuu]:
             if self.number >= 7 and not allow_mod:
                 return None
-            return Pai(str((self.number + 1) % 7) + self.type)
+            return Pai(str((self.number) % 7 + 1) + self.type)
         else:
             if self.number >= 9 and not allow_mod:
                 return None
-            return Pai(str((self.number + 1) % 10) + self.type)
+            return Pai(str((self.number) % 9 + 1) + self.type)
     
     @overload
     def previous(self, allow_mod: Literal[False] = False) -> "Pai | None":
@@ -342,7 +342,7 @@ class BasicFuro:
         return Mentsu(self.type, [p.copy() for p in self.pai_tuple])
     
     def __str__(self) -> str:
-        output = "(" + " ".join([p.__str__() for p in self.pai_tuple]) + ")"
+        output = "(" + " ".join([p.name for p in self.pai_tuple]) + ")"
         return f"<Furo {output}>"
 
     def to_dict(self) -> FuroDictType:
@@ -363,6 +363,10 @@ class Minkan:
 
         self.pai_tuple = (*self.self_pai_tuple, received_pai)
     
+    def __str__(self) -> str:
+        output = "(" + " ".join([p.name for p in self.pai_tuple]) + ")"
+        return f"<Minkan {output}>"
+
     def to_mentsu(self) -> Mentsu:
         """會丟失紅寶牌等細節資訊"""
         p = self.pai_tuple[0].get_normal()
@@ -385,6 +389,10 @@ class Kakan:
 
         self.pai_tuple = (*koutsu_furo.pai_tuple, received_pai)
     
+    def __str__(self) -> str:
+        output = "(" + " ".join([p.name for p in self.pai_tuple]) + ")"
+        return f"<Kakan {output}>"
+    
     def to_mentsu(self) -> Mentsu:
         """會丟失紅寶牌等細節資訊"""
         p = self.pai_tuple[0].get_normal()
@@ -406,6 +414,10 @@ class Ankan:
 
         self.pai_tuple = self_pai_tuple
     
+    def __str__(self) -> str:
+        output = "(" + " ".join([p.name for p in self.pai_tuple]) + ")"
+        return f"<Ankan {output}>"
+
     def to_mentsu(self) -> Mentsu:
         """會丟失紅寶牌等細節資訊"""
         p = self.pai_tuple[0].get_normal()
@@ -664,65 +676,81 @@ def is_tenpai(pai_list: list[Pai]) -> bool:
             return True
     return False
 
-def create_mentsu_list(pai_list: list[Pai], first_koutsu_deny: bool = False)  -> list[list[Mentsu]]:
-    """分割去除對子之胡牌組合 可傳入 0 3 6 9 12 張，input 必須已排序"""
+def create_mentsu_comb_list(pai_list: list[Pai], first_koutsu_deny: bool = False) -> list[list[Mentsu]]:
+    """分割去除對子之胡牌組合 可傳入 0 3 6 9 12 張，pai_list 必須已排序"""
     if len(pai_list) == 0:
         return []
-    all_pai = [pai.copy() for pai in pai_list]
-    result = []
-    if all_pai.count(all_pai[0]) < 3:
+    if pai_list.count(pai_list[0]) < 3:
         # 沒刻子拔
-        p, pp, ppp = all_pai[0].copy().get_shuntsu()
-        if pp is not None and ppp is not None and pp in all_pai and ppp in all_pai:
+        copied_list = pai_list.copy()
+        p, pp, ppp = copied_list[0].get_shuntsu()
+        if pp is not None and ppp is not None and pp in copied_list and ppp in copied_list:
             mentsu = Mentsu(tokens.shuntsu, [p, pp, ppp])
-            all_pai.remove(p)
-            all_pai.remove(pp)
-            all_pai.remove(ppp)
-            ll = create_mentsu_list(all_pai)
-            result += [[mentsu] + l for l in ll] if len(ll) != 0 else [[mentsu]]
+            copied_list.remove(p)
+            copied_list.remove(pp)
+            copied_list.remove(ppp)
+            if not copied_list:
+                return [[mentsu]]
+            sub_comb = create_mentsu_comb_list(copied_list)
+            if sub_comb:
+                return [[mentsu] + l for l in sub_comb]
+        return []
     else:
         if not first_koutsu_deny:
+            result: list[list[Mentsu]] = []
             # 先拔刻子
-            p = all_pai[0].copy()
-            mentsu = Mentsu(tokens.koutsu, [p, p.copy(), p.copy()])
-            del all_pai[0]
-            del all_pai[0]
-            del all_pai[0]
-            ll = create_mentsu_list(all_pai)
-            result += [[mentsu] + l for l in ll] if len(ll) != 0 else [[mentsu]]
+            copied_list = pai_list.copy()
+            p = copied_list[0]
+            mentsu = Mentsu(tokens.koutsu, [p, p, p])
+            copied_list.pop(0)
+            copied_list.pop(0)
+            copied_list.pop(0)
+            if not copied_list:
+                return [[mentsu]]
+            sub_comb = create_mentsu_comb_list(copied_list)
+            if sub_comb:
+                result += [[mentsu] + l for l in sub_comb]
 
             # 再拔順子
-            all_pai = [pai.copy() for pai in pai_list]
-            p, pp, ppp = all_pai[0].copy().get_shuntsu()
-            if pp is not None and ppp is not None and pp in all_pai and ppp in all_pai:
+            copied_list = pai_list.copy()
+            p, pp, ppp = copied_list[0].get_shuntsu()
+            if pp is not None and ppp is not None and pp in copied_list and ppp in copied_list:
                 mentsu = Mentsu(tokens.shuntsu, [p, pp, ppp])
-                all_pai.remove(p)
-                all_pai.remove(pp)
-                all_pai.remove(ppp)
-                ll = create_mentsu_list(all_pai, True) # 遞迴的第一張不能當刻子(前面拔過了，會撞)
-                result += [[mentsu] + l for l in ll] if len(ll) != 0 else [[mentsu]]
+                copied_list.remove(p)
+                copied_list.remove(pp)
+                copied_list.remove(ppp)
+                if not copied_list:
+                    return [[mentsu]]
+                sub_comb = create_mentsu_comb_list(copied_list, True) # 遞迴的第一張不能當刻子(前面拔過了，會撞)
+                if sub_comb:
+                    result += [[mentsu] + l for l in sub_comb]
+            return result
         else:
             # 第一張不能當刻子
             # 拔順子
-            p, pp, ppp = all_pai[0].copy().get_shuntsu()
-            if pp is not None and ppp is not None and pp in all_pai and ppp in all_pai:
+            copied_list = pai_list.copy()
+            p, pp, ppp = copied_list[0].get_shuntsu()
+            if pp is not None and ppp is not None and pp in copied_list and ppp in copied_list:
                 mentsu = Mentsu(tokens.shuntsu, [p, pp, ppp])
-                all_pai.remove(p)
-                all_pai.remove(pp)
-                all_pai.remove(ppp)
-                ll = create_mentsu_list(all_pai, True) # (True or False 都沒差了)(如果同種牌只有四張)
-                result += [[mentsu] + l for l in ll] if len(ll) != 0 else [[mentsu]]
-    return result
+                copied_list.remove(p)
+                copied_list.remove(pp)
+                copied_list.remove(ppp)
+                if not copied_list:
+                    return [[mentsu]]
+                sub_comb = create_mentsu_comb_list(copied_list, True) # (True or False 都沒差了)(如果同種牌只有四張)
+                if sub_comb:
+                    return [[mentsu] + l for l in sub_comb]
+            return []
 
 def get_agari_comb_list(pai_list: list[Pai]) -> list[AgariComb]:
     """分割胡牌組合 可傳入 2 5 8 11 14 張"""
 
-    result = []
+    result: list[AgariComb] = []
     all_pai = [p.copy() for p in pai_list]
     all_pai.sort(key = lambda p: p.int_sign())
 
     # extrack akadora
-    akadora_list = []
+    akadora_list: list[Pai] = []
     for p in all_pai:
         if p.is_akadora:
             akadora_list.append(p.copy())
@@ -758,9 +786,9 @@ def get_agari_comb_list(pai_list: list[Pai]) -> list[AgariComb]:
             comb = AgariComb(tokens.normal_agari_type, [], [Toitsu(pai_list=[x.copy(), x.copy()])], [], akadora_list)
             result.append(comb)
             break
-        mentsu_list = create_mentsu_list(a1)
-        for l in mentsu_list:
-            comb = AgariComb(tokens.normal_agari_type, l, [Toitsu(pai_list=[x.copy(), x.copy()])], [], akadora_list=akadora_list)
+        mentsu_comb_list = create_mentsu_comb_list(a1)
+        for comb in mentsu_comb_list:
+            comb = AgariComb(tokens.normal_agari_type, comb, [Toitsu(pai_list=[x.copy(), x.copy()])], [], akadora_list=akadora_list)
             result.append(comb)
         # 重製
         a1 = all_pai.copy()
@@ -806,11 +834,11 @@ class Tehai:
         if self.new_pai:
             output += f" | {self.new_pai.name}"
         else:
-            output += f" | None"
+            output += " | None"
         if self.furo_list:
-            output += " ".join([f.__str__() for f in self.furo_list])
+            output += " | " + " ".join([f.__str__() for f in self.furo_list])
         if self.penuki_list:
-            output += " ".join([p.name for p in self.penuki_list])
+            output += " | " + " ".join([p.name for p in self.penuki_list])
         return output
 
     def to_dict(self) -> TehaiDictType:
