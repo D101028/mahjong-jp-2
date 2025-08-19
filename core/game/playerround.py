@@ -368,7 +368,7 @@ class YoninPlayerRound:
                 else: # choose 'ron'
                     ron_players.append(plyer)
             if ron_players:
-                if len(ron_players) == 3 and BaseRules.atamahane_enabled:
+                if len(ron_players) == 3 and not BaseRules.atamahane_enabled:
                     roundresult = RoundResult(RoundResultTokens.sanchahoo_ryuukyoku)
                     return roundresult
                 if BaseRules.atamahane_enabled:
@@ -415,7 +415,7 @@ class YoninPlayerRound:
         
         # 取得暗槓哪張牌
         choices: list[tuple[Pai, ...]] = []
-        for p in ankan_pai_set:
+        for p in sorted(ankan_pai_set, key=lambda p1: p1.int_sign()):
             choices += get_same_pais_comb_list(player.tehai.pai_list, p, 4)
         if len(choices) >= 2:
             ans = Interactor([Prompt(player, Intent('standard', 'ask-to-choose-minpai-comb-content-type', {
@@ -424,6 +424,8 @@ class YoninPlayerRound:
             choice = choices[ans]
         else:
             choice = choices[0]
+        
+        pai = choice[0]
         
         # 槓開
         for p in choice:
@@ -478,7 +480,7 @@ class YoninPlayerRound:
                     else: # choose 'ron'
                         ron_players.append(plyer)
                 if ron_players:
-                    if len(ron_players) == 3 and BaseRules.atamahane_enabled:
+                    if len(ron_players) == 3 and not BaseRules.atamahane_enabled:
                         roundresult = RoundResult(RoundResultTokens.sanchahoo_ryuukyoku)
                         return roundresult
                     if BaseRules.atamahane_enabled:
@@ -621,7 +623,7 @@ class YoninPlayerRound:
                 ordered_ron_players = players
                 from_player = self.player
                 agari_pai = pai
-                if len(ordered_ron_players) == 3 and BaseRules.atamahane_enabled:
+                if len(ordered_ron_players) == 3 and not BaseRules.atamahane_enabled:
                     roundresult = RoundResult(RoundResultTokens.sanchahoo_ryuukyoku)
                     return roundresult
                 if BaseRules.atamahane_enabled:
