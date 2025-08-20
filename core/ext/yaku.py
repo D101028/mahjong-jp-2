@@ -141,7 +141,7 @@ ichihan_koyaku_list: list[int] = [
 nihan_koyaku_list: list[int] = [
     tokens.sanrenkoo, 
     tokens.sanfonkoo, 
-    tokens.chaopaikoo, 
+    tokens.chyaopaikoo, 
     tokens.teinsankoo, 
     tokens.chinpaikoo, 
     tokens.uumensai, 
@@ -180,10 +180,25 @@ daburu_yakuman_koyaku_list: list[int] = [
     tokens.sanshokudookan, 
     tokens.suuankan
 ]
-mechin_only_koyaku_list: list[int] = []
-furo_minus_koyaku_list: list[int] = []
+mechin_only_koyaku_list: list[int] = [
+    tokens.ryansuushun, 
+    tokens.gozokukyouwa, 
+    tokens.renhou, 
+    tokens.daisharin, 
+    tokens.daisuurin, 
+    tokens.daichikurin, 
+    tokens.daichisei, 
+    tokens.junseiheiiisoo, 
+    tokens.suuankan
+]
+furo_minus_koyaku_list: list[int] = [
+    tokens.isshokusanjun, 
+    tokens.tanhonhoo, 
+    tokens.chitanhonhoo
+]
 
 token_yaku_dict: dict[int, Yaku] = {}
+token_koyaku_dict: dict[int, Yaku] = {}
 
 for yakutoken in ichihan_yaku_list:
     yaku = Yaku(yakutoken = yakutoken, 
@@ -223,6 +238,39 @@ for yakutoken in daburu_yakuman_yaku_list:
                 is_menchin_only = (yakutoken in mechin_only_yaku_list),
                 is_yakuman = True)
     token_yaku_dict.update({yakutoken: yaku})
+
+for yakutoken in ichihan_koyaku_list:
+    yaku = Yaku(yakutoken = yakutoken, 
+                hansuu = 1, 
+                is_furo_minus = (yakutoken in furo_minus_koyaku_list),
+                is_menchin_only = (yakutoken in mechin_only_koyaku_list))
+    token_koyaku_dict.update({yakutoken: yaku})
+for yakutoken in sanhan_koyaku_list:
+    yaku = Yaku(yakutoken = yakutoken, 
+                hansuu = 3, 
+                is_furo_minus = (yakutoken in furo_minus_koyaku_list),
+                is_menchin_only = (yakutoken in mechin_only_koyaku_list))
+    token_koyaku_dict.update({yakutoken: yaku})
+for yakutoken in rokuhan_koyaku_list:
+    yaku = Yaku(yakutoken = yakutoken, 
+                hansuu = 6, 
+                is_furo_minus = (yakutoken in furo_minus_koyaku_list),
+                is_menchin_only = (yakutoken in mechin_only_koyaku_list))
+    token_koyaku_dict.update({yakutoken: yaku})
+for yakutoken in yakuman_koyaku_list:
+    yaku = Yaku(yakutoken = yakutoken, 
+                hansuu = 13, 
+                is_furo_minus = (yakutoken in furo_minus_koyaku_list),
+                is_menchin_only = (yakutoken in mechin_only_koyaku_list),
+                is_yakuman = True)
+    token_koyaku_dict.update({yakutoken: yaku})
+for yakutoken in daburu_yakuman_koyaku_list:
+    yaku = Yaku(yakutoken = yakutoken, 
+                hansuu = 26, 
+                is_furo_minus = (yakutoken in furo_minus_koyaku_list),
+                is_menchin_only = (yakutoken in mechin_only_koyaku_list),
+                is_yakuman = True)
+    token_koyaku_dict.update({yakutoken: yaku})
 
 ################################################################
 

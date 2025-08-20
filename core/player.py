@@ -56,7 +56,7 @@ class Player:
         self.config = config
 
         self.riichi_junme: int | None = None # 打出立直牌後的巡目
-        self.player_junme: int = 0
+        self.player_junme: int = 0           # 打牌、槓牌、拔北會增加 1
         self.is_junme_broken: bool = False
 
         self.doujin_furiten_pais: set[Pai] = set() # 保存會同巡振聽的牌，玩家打出牌後清空

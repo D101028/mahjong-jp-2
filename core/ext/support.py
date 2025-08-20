@@ -51,6 +51,8 @@ ryuuiisoopai_paitype_tuple = ("2s", "3s", "4s", "6s", "8s", "6z")
 chinroutoupai_paitype_tuple = ("1m", "9m", "1p", "9p", "1s", "9s")
 sanyuanpai_paitype_tuple = ("5z", "6z", "7z")
 suushiipai_paitype_tuple = ("1z", "2z", "3z", "4z")
+heiiisoopai_paitype_tuple = ("2p", "4p", "8p", "1z", "2z", "3z", "4z")
+benikujyakupai_paitype_tuple = ("1s", "5s", "7s", "9s", "7z")
 
 ######################## 細節規則設置 ###########################
 

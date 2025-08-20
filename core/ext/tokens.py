@@ -130,7 +130,7 @@ shousanfon = 154
 # 2
 sanrenkoo = 251
 sanfonkoo = 252
-chaopaikoo = 253
+chyaopaikoo = 253
 teinsankoo = 254
 chinpaikoo = 255
 uumensai = 256
