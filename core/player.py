@@ -105,6 +105,9 @@ class Player:
             p = self.tehai.new_pai
             self.river.datsuhai(p, to_riichi)
             self.tehai.new_pai = None
+            # 振聽處理
+            self.doujin_furiten_pais.clear()
+            self.datsu_furiten_pais.add(p)
             return p
         if pos >= len(self.tehai.pai_list) or pos < -len(self.tehai.pai_list):
             raise IndexError(f"Out of length of tehai.pai_list. Length: {len(self.tehai.pai_list)}, Given: {pos}")

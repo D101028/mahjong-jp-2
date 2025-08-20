@@ -895,7 +895,7 @@ class YoninPlayerRound:
             pai = self.player.datsuhai(len(self.player.tehai.pai_list)-1)
         else:
             pai = self.player.datsuhai()
-        print(f"Player datsuhai: {pai}")
+        print(f"\033[33mPlayer {self.player.name} datsuhai: {pai}\033[0m")
         next_player = self.player.next()
         
         # 判斷四風連打
