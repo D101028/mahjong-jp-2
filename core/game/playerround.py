@@ -254,6 +254,7 @@ class YoninPlayerRound:
     def minkan(self, player: Player, from_player: Player) -> "YoninPlayerRound | RoundResult":
         """執行明槓牌流程"""
         self.break_junme()
+        player.player_junme += 1
         pai = from_player.river.pai_list[-1]
         
         # 取得組合
@@ -312,6 +313,7 @@ class YoninPlayerRound:
     def kakan(self) -> "YoninPlayerRound | RoundResult":
         """執行加槓牌流程"""
         self.break_junme()
+        self.player.player_junme += 1
         player = self.player
         pai = player.tehai.new_pai
         if pai is None:
@@ -406,6 +408,7 @@ class YoninPlayerRound:
     def ankan(self) -> "YoninPlayerRound | RoundResult":
         """執行暗槓牌流程"""
         self.break_junme()
+        self.player.player_junme += 1
         player = self.player
         pai = player.tehai.new_pai
         if pai is None:
