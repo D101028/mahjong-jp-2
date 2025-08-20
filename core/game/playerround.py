@@ -909,15 +909,48 @@ class YoninPlayerRound:
             # 四槓散了
             return RoundResult(RoundResultTokens.suukansanra_ryuukyoku)
         elif self.yama.get_remaining() == 0:
-            # 普通流局
-            tenpai_players: list[Player] = []
+            # 流滿判斷
+            players = get_ordered_players(self.player)
+            players.append(self.player)
+            removing_set: set[Player] = set()
+            ## 移除被鳴牌的玩家
             for player in players_dict.values():
-                if player.tehai.is_tenpai():
-                    tenpai_players.append(player)
-            return RoundResult(
-                type_=RoundResultTokens.normal_ryuukyoku, 
-                tenpai_players=tenpai_players
-            )
+                for furo in player.tehai.furo_list:
+                    if isinstance(furo, BasicFuro):
+                        removing_set.add(id_players_dict[furo.from_player_id])
+                    elif isinstance(furo, Minkan):
+                        removing_set.add(id_players_dict[furo.from_player_id])
+                    elif isinstance(furo, Kakan):
+                        removing_set.add(id_players_dict[furo.koutsu_furo.from_player_id])
+            for player in removing_set:
+                players.remove(player)
+            ## 確認牌河全為么九
+            nagashimankan_players: list[Player] = []
+            for player in players:
+                if all(pai.is_yaochuu for pai in player.river.pai_list):
+                    nagashimankan_players.append(player)
+            if nagashimankan_players:
+                # 流滿
+                if BaseRules.atamahane_enabled:
+                    return RoundResult(
+                        type_=RoundResultTokens.nagashimankan, 
+                        nagashimankan_players=[nagashimankan_players[0]]
+                    )
+                else:
+                    return RoundResult(
+                        type_=RoundResultTokens.nagashimankan, 
+                        nagashimankan_players=nagashimankan_players
+                    )
+            else:
+                # 普通流局
+                tenpai_players: list[Player] = []
+                for player in players_dict.values():
+                    if player.tehai.is_tenpai():
+                        tenpai_players.append(player)
+                return RoundResult(
+                    type_=RoundResultTokens.normal_ryuukyoku, 
+                    tenpai_players=tenpai_players
+                )
         else:
             self.draw(next_player)
             return YoninPlayerRound(next_player, self.yama, self.chanfon, PlayerRoundParam(
