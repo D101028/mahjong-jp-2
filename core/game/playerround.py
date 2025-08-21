@@ -152,11 +152,87 @@ def get_sekininbarai(player: Player, agari_result: AgariResult) -> list[tuple[Pl
 
     if BaseRules.koyaku_enabled:
         # 四連刻
+        if (token_koyaku_dict[tokens.suurenkoo] in agari_result.yaku_list or token_koyaku_dict[tokens.junseisuurenkoo] in agari_result.yaku_list) and len(player.tehai.furo_list) >= 4:
+            pai_set: set[Pai] = set((k.pai_tuple[0] for k in player.tehai.furo_list if k.type != tokens.shuntsu and k.pai_tuple[0].type != support.token_paitype_dict[tokens.zuu]))
+            sorted_list = sorted(pai_set, key=lambda p: p.int_sign())
+            temp_list: list[Pai]
+            for p in sorted_list[:-3]:
+                temp_list = [p]
+                for _ in range(3):
+                    p = p.next()
+                    if p is None or p not in pai_set:
+                        break
+                    else:
+                        temp_list.append(p)
+                else:
+                    for furo in player.tehai.furo_list[::-1]:
+                        if furo.type == tokens.shuntsu or furo.pai_tuple[0] not in temp_list:
+                            continue
+                        if isinstance(furo, Ankan | Kakan):
+                            break
+                        else:
+                            yakus = []
+                            if token_koyaku_dict[tokens.suurenkoo] in agari_result.yaku_list:
+                                yakus.append(token_koyaku_dict[tokens.suurenkoo])
+                            if token_koyaku_dict[tokens.junseisuurenkoo] in agari_result.yaku_list:
+                                yakus.append(token_koyaku_dict[tokens.junseisuurenkoo] in agari_result.yaku_list)
+                            for yaku in yakus:
+                                sekininbarai.append((id_players_dict[furo.from_player_id], yaku))
+                            break
+                    break
+
         # 一色四同順
+        if token_koyaku_dict[tokens.isshokuyonjun] in agari_result.yaku_list and \
+           len(player.tehai.furo_list) >= 4 and \
+           any((furo.type == tokens.shuntsu and player.tehai.furo_list.count(furo) >= 4) for furo in player.tehai.furo_list):
+            for furo in player.tehai.furo_list[::-1]:
+                if not isinstance(furo, BasicFuro) or furo.type == tokens.shuntsu:
+                    continue
+                sekininbarai.append((id_players_dict[furo.from_player_id], token_koyaku_dict[tokens.isshokuyonjun]))
+                break
+        
         # 四跳牌刻
+        if token_koyaku_dict[tokens.suuchyaopaikoo] in agari_result.yaku_list and len(player.tehai.furo_list) >= 4:
+            pai_set: set[Pai] = set((k.pai_tuple[0] for k in player.tehai.furo_list if k.type != tokens.shuntsu and k.pai_tuple[0].type != support.token_paitype_dict[tokens.zuu]))
+            sorted_list = sorted(pai_set, key=lambda p: p.int_sign())
+            for p in sorted_list[:-3]:
+                temp_list = [p]
+                for _ in range(3):
+                    p = p.next()
+                    if p is None:
+                        break
+                    p = p.next()
+                    if p is None or p not in pai_set:
+                        break
+                    temp_list.append(p)
+                else:
+                    if furo.type == tokens.shuntsu or furo.pai_tuple[0] not in temp_list:
+                        continue
+                    if not isinstance(furo, Ankan | Kakan):
+                        sekininbarai.append((id_players_dict[furo.from_player_id], token_koyaku_dict[tokens.suuchyaopaikoo]))
+                    break
+
         # 三色同槓
-        # 四連槓
-        pass 
+        if token_koyaku_dict[tokens.sanshokudookan] in agari_result.yaku_list:
+            if sum(isinstance(furo, Minkan | Kakan | Ankan) for furo in player.tehai.furo_list) >= 3:
+                count_dict: dict[int, int] = {i:0 for i in range(1, 10)}
+                for furo in player.tehai.furo_list:
+                    if not isinstance(furo, Minkan | Kakan | Ankan):
+                        continue
+                    p = furo.pai_tuple[0]
+                    if p.type == support.token_paitype_dict[tokens.zuu]:
+                        continue
+                    count_dict[p.number] += 1
+                if any(i >= 3 for i in count_dict.values()):
+                    for furo in player.tehai.furo_list[::-1]:
+                        if not isinstance(furo, Minkan | Kakan | Ankan):
+                            continue
+                        p = furo.pai_tuple[0]
+                        if p.type == support.token_paitype_dict[tokens.zuu]:
+                            continue
+                        if isinstance(furo, Minkan):
+                            sekininbarai.append((id_players_dict[furo.from_player_id], token_koyaku_dict[tokens.sanshokudookan]))
+                        break
 
     return sekininbarai
 

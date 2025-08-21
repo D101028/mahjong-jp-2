@@ -1624,7 +1624,7 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
         
         # 小三風
         if len(toitsu_list) == 1 and toitsu_list[0].pai_list[0] in suushiipai_list and len(koutsu_list) >= 2:
-            suushi_set: set[Pai] = set([toitsu_list[0].pai_list[0]])
+            suushi_set: set[Pai] = set((toitsu_list[0].pai_list[0], ))
             for koutsu in koutsu_list:
                 p = koutsu.pai_list[0]
                 if p in suushiipai_list:
@@ -1635,9 +1635,11 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
         # 一堆刻
         if len(koutsu_list) >= 3:
             # 三連刻、四連刻、純正四連刻
-            pai_set: set[Pai] = set([k.pai_list[0] for k in koutsu_list])
+            pai_set: set[Pai] = set((k.pai_list[0] for k in koutsu_list))
             sorted_list = sorted(pai_set, key=lambda p: p.int_sign())
             for p in sorted_list[:-2]:
+                if p.type == support.token_paitype_dict[tokens.zuu]:
+                    continue
                 for _ in range(2):
                     p = p.next()
                     if p is None or p not in pai_set:
@@ -1661,6 +1663,8 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
             
             # 跳牌刻 四跳牌刻
             for p in sorted_list[:-2]:
+                if p.type == support.token_paitype_dict[tokens.zuu]:
+                    continue
                 for _ in range(2):
                     p = p.next()
                     if p is None:
