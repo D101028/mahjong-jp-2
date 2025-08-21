@@ -63,6 +63,8 @@ class Player:
         self.datsu_furiten_pais: set[Pai] = set()  # 保存所有打出過的牌
         self.is_riichi_furiten: bool = False
 
+        self.continued_kan_count: int = 0
+
         players_dict[menfon] = self
         id_players_dict[ID] = self
 
@@ -94,6 +96,7 @@ class Player:
         """從 tehai 打牌"""
         # 巡目處理
         self.player_junme += 1
+        self.continued_kan_count = 0
         self.is_junme_broken = False
         if to_riichi:
             self.riichi_junme = self.player_junme

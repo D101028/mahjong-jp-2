@@ -22,6 +22,10 @@ class BaseRules:
 
     is_nagashimankan_hoora = False # 啟用時，流局滿貫計為胡牌，否則為流局
 
+    minkan_sekininbarai_enabled = True # 包明槓後的嶺上開花
+    
+    multiple_kan_sekininbarai_enabled = True # 包明槓後連槓的嶺上開花 (優先於 minkan_sekininbarai_enabled)
+
 class YoninRules: # 四人規則
 
     initial_tensuu = 25000 # 玩家起始點數

@@ -10,11 +10,13 @@ from typing import Literal, Iterable
 
 from core.ext import tokens, support
 from core.ext.rule import BaseRules
+from core.ext.yaku import token_yaku_dict, token_koyaku_dict, Yaku
 from core.game.yama import YoninYama
 from core.interface import Intent, Prompt, Interactor
 from core.pai import Param, Pai, FuroType, BasicFuro, Minkan, Ankan, Kakan, Tehai, \
                      get_agari_result_list, AgariResult, is_agari, is_tenpai, \
-                     get_kuikae_list, strict_pick_pais_with_loose_equal, strict_remove
+                     get_kuikae_list, strict_pick_pais_with_loose_equal, strict_remove, \
+                     sanyuanpai_list, suushiipai_list
 from core.player import Player, players_dict, id_players_dict, get_ordered_players
 from core.types import *
 
@@ -55,9 +57,9 @@ class RoundResult:
         type_: int, 
         tenpai_players: list[Player] | None = None, 
         nagashimankan_players: list[Player] | None = None, 
-        ron_players_results: list[tuple[Player, AgariResult]] | None = None, 
+        ron_players_results: list[tuple[Player, AgariResult, list[tuple[Player, Yaku | None]]]] | None = None, 
         ron_from_player: Player | None = None, 
-        tsumo_player_result: tuple[Player, AgariResult] | None = None, 
+        tsumo_player_result: tuple[Player, AgariResult, list[tuple[Player, Yaku | None]]] | None = None, 
         kyuushukyuhai_player: Player | None = None, 
     ) -> None:
         if type_ not in RoundResultTokens.__dict__.values():
@@ -67,7 +69,7 @@ class RoundResult:
         self.tenpai_players = tenpai_players
         self.ron_players_results = ron_players_results
         self.ron_from_player = ron_from_player
-        self.tsumo_player_result = tsumo_player_result
+        self.tsumo_player_result = tsumo_player_result # (tsumo player, agari result, sekininbarai)
         self.kyuushukyuhai_player = kyuushukyuhai_player
     
     def __str__(self) -> str:
@@ -104,6 +106,59 @@ def get_same_pais_comb_list(pai_list: list[Pai], pai: Pai, count: int) -> list[t
     for idx in reversed(remove_idx_list):
         comb_list.pop(idx)
     return comb_list
+
+def get_sekininbarai(player: Player, agari_result: AgariResult) -> list[tuple[Player, Yaku | None]]:
+    sekininbarai: list[tuple[Player, Yaku | None]] = []
+    # 大三元
+    if token_yaku_dict[tokens.daisangen] in agari_result.yaku_list and sum(furo.pai_tuple[0] in sanyuanpai_list for furo in player.tehai.furo_list) >= 3:
+        temp_list = [furo.pai_tuple[0] for furo in player.tehai.furo_list]
+        if all(p in temp_list for p in sanyuanpai_list):
+            for furo in player.tehai.furo_list[::-1]:
+                if furo.pai_tuple[0] not in sanyuanpai_list:
+                    continue
+                if isinstance(furo, Minkan) or (isinstance(furo, BasicFuro) and furo.type == tokens.koutsu):
+                    sekininbarai.append((id_players_dict[furo.from_player_id], token_yaku_dict[tokens.daisangen]))
+                break
+    
+    # 大四喜
+    if token_yaku_dict[tokens.daisuushii] in agari_result.yaku_list and sum(furo.pai_tuple[0] in suushiipai_list for furo in player.tehai.furo_list) >= 4:
+        temp_list = [furo.pai_tuple[0] for furo in player.tehai.furo_list]
+        if all(p in temp_list for p in suushiipai_list):
+            for furo in player.tehai.furo_list[::-1]:
+                if furo.pai_tuple[0] not in suushiipai_list:
+                    continue
+                if isinstance(furo, Minkan) or (isinstance(furo, BasicFuro) and furo.type == tokens.koutsu):
+                    sekininbarai.append((id_players_dict[furo.from_player_id], token_yaku_dict[tokens.daisuushii]))
+                break
+    
+    # 四槓子
+    if token_yaku_dict[tokens.suukantsu] in agari_result.yaku_list:
+        for furo in player.tehai.furo_list[::-1]:
+            if not isinstance(furo, Minkan | Ankan | Kakan):
+                continue
+            if isinstance(furo, Minkan):
+                sekininbarai.append((id_players_dict[furo.from_player_id], token_yaku_dict[tokens.suukantsu]))
+    
+    # 包槓
+    if BaseRules.minkan_sekininbarai_enabled and player.continued_kan_count > 0:
+        if player.continued_kan_count == 1:
+            furo = player.tehai.furo_list[-1]
+            if isinstance(furo, Minkan):
+                sekininbarai.append((id_players_dict[furo.from_player_id], None))
+        elif BaseRules.multiple_kan_sekininbarai_enabled:
+            furo = player.tehai.furo_list[-player.continued_kan_count]
+            if isinstance(furo, Minkan):
+                sekininbarai.append((id_players_dict[furo.from_player_id], None))
+
+    if BaseRules.koyaku_enabled:
+        # 四連刻
+        # 一色四同順
+        # 四跳牌刻
+        # 三色同槓
+        # 四連槓
+        pass 
+
+    return sekininbarai
 
 class YoninPlayerRound:
     def __init__(self, player: Player, yama: YoninYama, chanfon: int, prparam: PlayerRoundParam) -> None:
@@ -255,6 +310,7 @@ class YoninPlayerRound:
         """執行明槓牌流程"""
         self.break_junme()
         player.player_junme += 1
+        player.continued_kan_count += 1
         pai = from_player.river.pai_list[-1]
         
         # 取得組合
@@ -298,12 +354,14 @@ class YoninPlayerRound:
     
     def ron(self, players_args: list[tuple[Player, Param]], from_player: Player, agari_pai: Pai) -> RoundResult:
         """執行榮和流程"""
-        ron_players_results: list[tuple[Player, AgariResult]] = []
+        ron_players_results: list[tuple[Player, AgariResult, list[tuple[Player, Yaku | None]]]] = []
         for player, param in players_args:
             agari_results = get_agari_result_list(player.tehai, agari_pai, param)
             if not agari_results:
                 raise Exception(f"The player {player} is not agari!")
-            ron_players_results.append((player, max(agari_results, key=lambda result: result.all_tensuu)))
+            result = max(agari_results, key=lambda result: result.all_tensuu)
+            sekininbarai = get_sekininbarai(player, result)
+            ron_players_results.append((player, result, sekininbarai))
         return RoundResult(
             RoundResultTokens.ron, 
             ron_players_results=ron_players_results, 
@@ -314,6 +372,7 @@ class YoninPlayerRound:
         """執行加槓牌流程"""
         self.break_junme()
         self.player.player_junme += 1
+        self.player.continued_kan_count += 1
         player = self.player
         pai = player.tehai.new_pai
         if pai is None:
@@ -409,6 +468,7 @@ class YoninPlayerRound:
         """執行暗槓牌流程"""
         self.break_junme()
         self.player.player_junme += 1
+        self.player.continued_kan_count += 1
         player = self.player
         pai = player.tehai.new_pai
         if pai is None:
@@ -531,9 +591,10 @@ class YoninPlayerRound:
         agari_results = get_agari_result_list(player.tehai, pai, param)
         if not agari_results:
             raise Exception(f"The player {player} is not agari!")
+        result = max(agari_results, key=lambda result: result.all_tensuu)
         return RoundResult(
             RoundResultTokens.tsumo, 
-            tsumo_player_result=(player, max(agari_results, key=lambda result: result.all_tensuu))
+            tsumo_player_result=(player, result, get_sekininbarai(player, result))
         )
 
     def suukansanra_ryuukyoku_satisfied(self) -> bool:
