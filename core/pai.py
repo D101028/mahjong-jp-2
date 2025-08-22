@@ -8,7 +8,7 @@ from typing import Literal, Iterable, overload
 
 from core.ext import support, yaku, tokens
 from core.ext.index import *
-from core.ext.rule import BaseRules
+from core.ext.rule import BaseRules, EnabledKoyaku
 from core.ext.yaku import Yaku, token_yaku_dict, token_koyaku_dict
 from core.types import *
 
@@ -1611,19 +1611,19 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
     # 古役
     if BaseRules.koyaku_enabled:
         # 燕返
-        if param.is_tsubamegaeshi:
+        if EnabledKoyaku.tsubamegaeshi and param.is_tsubamegaeshi:
             result.append(token_koyaku_dict[tokens.tsubamegaeshi])
         
         # 槓振
-        if param.is_kanfuri:
+        if EnabledKoyaku.kanfuri and param.is_kanfuri:
             result.append(token_koyaku_dict[tokens.kanfuri])
         
         # 十二落抬
-        if sum([furo.type != tokens.ankan for furo in tehai_comb.furo_list]) >= 4:
+        if EnabledKoyaku.shiiaruraotai and sum([furo.type != tokens.ankan for furo in tehai_comb.furo_list]) >= 4:
             result.append(token_koyaku_dict[tokens.shiiaruraotai])
         
         # 小三風
-        if len(toitsu_list) == 1 and toitsu_list[0].pai_list[0] in suushiipai_list and len(koutsu_list) >= 2:
+        if EnabledKoyaku.shousanfon and len(toitsu_list) == 1 and toitsu_list[0].pai_list[0] in suushiipai_list and len(koutsu_list) >= 2:
             suushi_set: set[Pai] = set((toitsu_list[0].pai_list[0], ))
             for koutsu in koutsu_list:
                 p = koutsu.pai_list[0]
@@ -1645,21 +1645,24 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
                     if p is None or p not in pai_set:
                         break
                 else:
-                    result.append(token_koyaku_dict[tokens.sanrenkoo])
+                    if EnabledKoyaku.sanrenkoo:
+                        result.append(token_koyaku_dict[tokens.sanrenkoo])
                     p = p.next()
                     if p is not None and p in pai_set:
-                        result.append(token_koyaku_dict[tokens.suurenkoo])
-                        if tehai_comb.tenpai_type == tokens.soohoomachi:
+                        if EnabledKoyaku.suurenkoo:
+                            result.append(token_koyaku_dict[tokens.suurenkoo])
+                        if tehai_comb.tenpai_type == tokens.soohoomachi and EnabledKoyaku.junseisuurenkoo:
                             result.append(token_koyaku_dict[tokens.junseisuurenkoo])
                     break
         
             # 三風刻
-            count = 0
-            for p in pai_set:
-                if p in suushiipai_list:
-                    count += 1
-            if count >= 3:
-                result.append(token_koyaku_dict[tokens.sanfonkoo])
+            if EnabledKoyaku.sanfonkoo:
+                count = 0
+                for p in pai_set:
+                    if p in suushiipai_list:
+                        count += 1
+                if count >= 3:
+                    result.append(token_koyaku_dict[tokens.sanfonkoo])
             
             # 跳牌刻 四跳牌刻
             for p in sorted_list[:-2]:
@@ -1673,31 +1676,34 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
                     if p is None or p not in pai_set:
                         break
                 else:
-                    result.append(token_koyaku_dict[tokens.chyaopaikoo])
+                    if EnabledKoyaku.chyaopaikoo:
+                        result.append(token_koyaku_dict[tokens.chyaopaikoo])
                     p = p.next()
                     if p is None:
                         break
                     p = p.next()
-                    if p is not None and p in pai_set:
+                    if p is not None and p in pai_set and EnabledKoyaku.suuchyaopaikoo:
                         result.append(token_koyaku_dict[tokens.suuchyaopaikoo])
                     break
 
             # 頂三刻
-            for t in (tokens.man, tokens.suo, tokens.pin):
-                s = support.token_paitype_dict[t]
-                if all((Pai(f'{i}{s}') in pai_set) for i in (1, 5, 9)):
-                    result.append(token_koyaku_dict[tokens.teinsankoo])
-                    break
+            if EnabledKoyaku.teinsankoo:
+                for t in (tokens.man, tokens.suo, tokens.pin):
+                    s = support.token_paitype_dict[t]
+                    if all((Pai(f'{i}{s}') in pai_set) for i in (1, 5, 9)):
+                        result.append(token_koyaku_dict[tokens.teinsankoo])
+                        break
             
             # 筋牌刻
-            for t in ((1, 4, 7), (2, 5, 8), (3, 6, 9)):
-                if all(
-                    (p.type != support.token_paitype_dict[tokens.zuu] \
-                      and p.number in t)
-                    for p in pai_set
-                ):
-                    result.append(token_koyaku_dict[tokens.chinpaikoo])
-                    break
+            if EnabledKoyaku.chinpaikoo:
+                for t in ((1, 4, 7), (2, 5, 8), (3, 6, 9)):
+                    if all(
+                        (p.type != support.token_paitype_dict[tokens.zuu] \
+                        and p.number in t)
+                        for p in pai_set
+                    ):
+                        result.append(token_koyaku_dict[tokens.chinpaikoo])
+                        break
 
         # 五門齊、五族協和
         mens: dict[Literal['man', 'suo', 'pin', 'fon', 'yuan'], bool] = {
@@ -1721,18 +1727,22 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
                     else:
                         mens['yuan'] = True
         if all(mens.values()):
-            result.append(token_koyaku_dict[tokens.uumensai])
+            if EnabledKoyaku.uumensai:
+                result.append(token_koyaku_dict[tokens.uumensai])
             if is_menchin and len(koutsu_list) >= 4 and \
                toitsu_list[0].pai_list[0].type == support.token_paitype_dict[tokens.zuu]:
-                result.append(token_koyaku_dict[tokens.gozokukyouwa])
+                if EnabledKoyaku.gozokukyouwa:
+                    result.append(token_koyaku_dict[tokens.gozokukyouwa])
 
         # 二暗槓、三暗槓、四暗槓
         ankan_suu = sum(furo.type == tokens.ankan for furo in tehai_comb.furo_list)
         if ankan_suu >= 2:
-            result.append(token_koyaku_dict[tokens.ryanankan])
+            if EnabledKoyaku.ryanankan:
+                result.append(token_koyaku_dict[tokens.ryanankan])
             if ankan_suu >= 3:
-                result.append(token_koyaku_dict[tokens.sanankan])
-                if ankan_suu >= 4:
+                if EnabledKoyaku.sanankan:
+                    result.append(token_koyaku_dict[tokens.sanankan])
+                if ankan_suu >= 4 and EnabledKoyaku.suuankan:
                     result.append(token_koyaku_dict[tokens.suuankan])
         
         # 一色三同順、一色四同順
@@ -1743,24 +1753,26 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
                 next2_shuntsu = sorted_list[idx+2]
                 if shuntsu != next1_shuntsu or shuntsu != next2_shuntsu:
                     continue
-                result.append(token_koyaku_dict[tokens.isshokusanjun])
+                if EnabledKoyaku.isshokusanjun:
+                    result.append(token_koyaku_dict[tokens.isshokusanjun])
                 if idx + 3 >= len(sorted_list):
                     break
                 next3_shuntsu = sorted_list[idx+3]
-                if shuntsu == next3_shuntsu:
+                if shuntsu == next3_shuntsu and EnabledKoyaku.isshokuyonjun:
                     result.append(token_koyaku_dict[tokens.isshokuyonjun])
                 break
 
         # 斷紅和、清斷紅和
         pai_list = ryuuiisoopai_list + heiiisoopai_list + [Pai(support.token_yakuhai_painame_dict[tokens.yakuhai_haku])]
         if all(p in pai_list for p in all_pai):
-            result.append(token_koyaku_dict[tokens.tanhonhoo])
+            if EnabledKoyaku.tanhonhoo:
+                result.append(token_koyaku_dict[tokens.tanhonhoo])
             s = support.token_paitype_dict[tokens.zuu]
-            if all(p.type != s for p in pai_list):
+            if EnabledKoyaku.chitanhonhoo and all(p.type != s for p in pai_list):
                 result.append(token_koyaku_dict[tokens.chitanhonhoo])
 
         # 同順二盃口
-        if is_menchin and len(shuntsu_list) >= 4:
+        if EnabledKoyaku.ryansuushun and is_menchin and len(shuntsu_list) >= 4:
             shuntsu_set = set(shuntsu_list)
             double_shuntsu_list: list[Mentsu] = []
             for shuntsu in shuntsu_set:
@@ -1776,26 +1788,26 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
                     result.append(token_koyaku_dict[tokens.ryansuushun])
 
         # 人和
-        if not param.is_junme_broken and param.agari_junme == 0 and param.agari_type == 'ron':
+        if EnabledKoyaku.renhou and not param.is_junme_broken and param.agari_junme == 0 and param.agari_type == 'ron':
             result.append(token_koyaku_dict[tokens.renhou])
 
         # 四槓落抬 (四槓後若嶺上牌沒自摸，則蓋牌胡役滿)
         # 四槓花開 (四槓後且嶺上開花，加上這個共兩倍役滿)
 
         # 花天月地
-        if param.is_rinshankaihou and param.remaining_pai_num == 0:
+        if EnabledKoyaku.katengecchi and param.is_rinshankaihou and param.remaining_pai_num == 0:
             result.append(token_koyaku_dict[tokens.katengecchi])
 
         # 石上三年
-        if param.riichi_junme == 1 and param.remaining_pai_num == 0:
+        if EnabledKoyaku.ishiuesannen and param.riichi_junme == 1 and param.remaining_pai_num == 0:
             result.append(token_koyaku_dict[tokens.ishiuesannen])
 
         # 黑一色
-        if all((p in heiiisoopai_list) for p in all_pai):
+        if EnabledKoyaku.heiiisoo and all((p in heiiisoopai_list) for p in all_pai):
             result.append(token_koyaku_dict[tokens.heiiisoo])
         
         # 紅孔雀
-        if all((p in benikujyakupai_list) for p in all_pai):
+        if EnabledKoyaku.benikujyaku and all((p in benikujyakupai_list) for p in all_pai):
             result.append(token_koyaku_dict[tokens.benikujyaku])
 
         # 大車輪、大數鄰、大竹林、大七星、純正黑一色
@@ -1812,14 +1824,14 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
                     else:
                         num_set.add(p.number)
                 else:
-                    if type_ == tokens.man:
+                    if type_ == tokens.man and EnabledKoyaku.daisuurin:
                         result.append(token_koyaku_dict[tokens.daisuurin])
-                    elif type_ == tokens.suo:
+                    elif type_ == tokens.suo and EnabledKoyaku.daichikurin:
                         result.append(token_koyaku_dict[tokens.daichikurin])
-                    elif type_ == tokens.pin:
+                    elif type_ == tokens.pin and EnabledKoyaku.daisharin:
                         result.append(token_koyaku_dict[tokens.daisharin])
             
-            if type_ == support.token_paitype_dict[tokens.zuu]:
+            if EnabledKoyaku.daichisei and type_ == support.token_paitype_dict[tokens.zuu]:
                 num_set: set[int] = set()
                 num_set.add(p.number)
                 for toitsu in toitsu_list[1:]:
@@ -1831,15 +1843,15 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
                 else:
                     result.append(token_koyaku_dict[tokens.daichisei])
 
-            if all(t.pai_list[0] in heiiisoopai_list for t in toitsu_list):
+            if EnabledKoyaku.junseiheiiisoo and all(t.pai_list[0] in heiiisoopai_list for t in toitsu_list):
                 result.append(token_koyaku_dict[tokens.junseiheiiisoo])
 
         # 三色同暗刻
-        if token_yaku_dict[tokens.sanshokudookoo] in result and token_yaku_dict[tokens.sanankoo] in result:
+        if EnabledKoyaku.sanshokudooankoo and token_yaku_dict[tokens.sanshokudookoo] in result and token_yaku_dict[tokens.sanankoo] in result:
             result.append(token_koyaku_dict[tokens.sanshokudooankoo])
         
         # 三色同槓
-        if len(koutsu_list) >= 3 and sum(isinstance(furo, Minkan | Kakan | Ankan) for furo in tehai_comb.furo_list) >= 3:
+        if EnabledKoyaku.sanshokudookan and len(koutsu_list) >= 3 and sum(isinstance(furo, Minkan | Kakan | Ankan) for furo in tehai_comb.furo_list) >= 3:
             count_dict: dict[int, int] = {i:0 for i in range(1, 10)}
             for furo in tehai_comb.furo_list:
                 if not isinstance(furo, Minkan | Kakan | Ankan):
@@ -1855,11 +1867,12 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
     koumokukoukan_dict: dict[int, tuple[Yaku, ...]] = {}
     koumokukoukan_dict.update(yaku.koumokukoukan_token_dict)
     if BaseRules.koyaku_enabled:
+        # 加入古役用複合役
         koumokukoukan_dict.update(yaku.koumokukoukan_koyaku_token_dict)
     if BaseRules.aotenjyou_enabled: # 青天井
-        # 加入古役用複合役
         koumokukoukan_dict.update(yaku.oatenjyou_koumokukoukan_token_dict)
         if BaseRules.koyaku_enabled:
+            # 加入古役用複合役
             koumokukoukan_dict.update(yaku.oatenjyou_koumokukoukan_koyaku_token_dict)
     else:
         # 若有役滿，則刪除役滿以外

@@ -158,6 +158,7 @@ rokuhan_koyaku_list: list[int] = [
 yakuman_koyaku_list: list[int] = [
     tokens.suurenkoo, 
     tokens.isshokuyonjun, 
+    tokens.suuchyaopaikoo, 
     tokens.gozokukyouwa, 
     tokens.renhou, 
     tokens.suukantsuraotai, 
@@ -244,6 +245,12 @@ for yakutoken in ichihan_koyaku_list:
                 hansuu = 1, 
                 is_furo_minus = (yakutoken in furo_minus_koyaku_list),
                 is_menchin_only = (yakutoken in mechin_only_koyaku_list))
+    token_koyaku_dict.update({yakutoken: yaku})
+for yakutoken in nihan_koyaku_list:
+    yaku = Yaku(yakutoken = yakutoken, 
+                hansuu = 2, 
+                is_furo_minus = (yakutoken in furo_minus_yaku_list),
+                is_menchin_only = (yakutoken in mechin_only_yaku_list))
     token_koyaku_dict.update({yakutoken: yaku})
 for yakutoken in sanhan_koyaku_list:
     yaku = Yaku(yakutoken = yakutoken, 

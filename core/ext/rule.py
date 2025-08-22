@@ -38,5 +38,62 @@ class SanninRules: # 三人規則
 
     least_winner_tensuu = 40000 # 遊戲結束的最低點數門檻 (不含三人東西入 or 三人南北入)
 
+class EnabledKoyaku: # 採用的古役
+    """To enable these settings, make sure `koyaku_enabled` in BaseRules is True."""
 
+    tsubamegaeshi = True
+    kanfuri = True
+    shiiaruraotai = True
+    shousanfon = True
+
+    sanrenkoo = True
+    sanfonkoo = True
+    chyaopaikoo = True
+    teinsankoo = True
+    chinpaikoo = True
+    uumensai = True
+    ryanankan = True
     
+    isshokusanjun = True
+    tanhonhoo = True
+    ryansuushun = True
+    
+    chitanhonhoo = True
+    
+    suurenkoo = True
+    isshokuyonjun = True
+    suuchyaopaikoo = True
+    gozokukyouwa = True
+    renhou = True
+    suukantsuraotai = True
+    suukanrinshan = True
+    katengecchi = True
+    ishiuesannen = True
+    sanankan = True
+
+    heiiisoo = True
+    benikujyaku = True
+    daisharin = True
+    daisuurin = True
+    daichikurin = True
+    sanshokudooankoo = True
+
+    junseisuurenkoo = True
+    daichisei = True
+    junseiheiiisoo = True
+    sanshokudookan = True
+    suuankan = True
+
+    ryansuushun = True
+    gozokukyouwa = True
+    renhou = True
+    daisharin = True
+    daisuurin = True
+    daichikurin = True
+    daichisei = True
+    junseiheiiisoo = True
+    suuankan = True
+
+    isshokusanjun = True
+    tanhonhoo = True
+    chitanhonhoo = True
