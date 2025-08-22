@@ -1,6 +1,6 @@
 from typing import Any, Literal, overload
 
-from core.types import *
+from ..types import *
 
 def to_intent(dict1: dict[str, Any]):
     response_type = dict1.get('response-type')

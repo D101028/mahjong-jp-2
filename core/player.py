@@ -2,9 +2,9 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from core.game.yama import YamaType
 
-from core.ext import tokens, support
-from core.pai import Pai, Tehai, Param, is_tenpai
-from core.types import *
+from .ext import tokens, support
+from .pai import Pai, Tehai, Param, is_tenpai
+from .types import *
 
 class River:
     def __init__(self) -> None:

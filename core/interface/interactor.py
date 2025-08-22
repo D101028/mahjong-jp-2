@@ -4,9 +4,9 @@ import time
 from threading import Thread
 from typing import Any, Literal
 
-from .prompt import Prompt
 from config import Config
-from core.types import *
+from .prompt import Prompt
+from ..types import *
 
 class TerminalResponse:
     def __init__(self, response: str = "", is_ok: bool = False) -> None:

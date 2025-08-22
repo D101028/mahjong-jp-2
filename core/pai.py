@@ -6,11 +6,11 @@
 
 from typing import Literal, Iterable, overload
 
-from core.ext import support, yaku, tokens
-from core.ext.index import *
-from core.ext.rule import BaseRules, EnabledKoyaku
-from core.ext.yaku import Yaku, token_yaku_dict, token_koyaku_dict
-from core.types import *
+from .ext import support, yaku, tokens
+from .ext.index import *
+from .ext.rule import BaseRules, EnabledKoyaku
+from .ext.yaku import Yaku, token_yaku_dict, token_koyaku_dict
+from .types import *
 
 class Pai:
     def __init__(self, arg: str | PaiDictType):

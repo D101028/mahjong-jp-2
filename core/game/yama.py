@@ -1,12 +1,12 @@
 import random
 from typing import Iterable
 
-from core.pai import Pai
-from core.player import Player, players_dict, get_ordered_players
-from core.ext import support
-from core.ext.index import *
-from core.ext.rule import BaseRules, YoninRules, SanninRules
-from core.types import *
+from ..pai import Pai
+from ..player import Player, players_dict, get_ordered_players
+from ..ext import support
+from ..ext.index import *
+from ..ext.rule import BaseRules, YoninRules, SanninRules
+from ..types import *
 
 class DoraHyouji:
     def __init__(self, hyouji_pai_list: list[Pai]) -> None:

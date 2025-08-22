@@ -1,4 +1,4 @@
-from core.ext import tokens
+from . import tokens
 
 ######################### 基本字形定義 #########################
 token_paitype_dict = { # 不得為數字

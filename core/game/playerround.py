@@ -8,17 +8,17 @@ from collections import OrderedDict
 from itertools import combinations_with_replacement
 from typing import Literal, Iterable
 
-from core.ext import tokens, support
-from core.ext.rule import BaseRules
-from core.ext.yaku import token_yaku_dict, token_koyaku_dict, Yaku
-from core.game.yama import YamaType, YoninYama
-from core.interface import Intent, Prompt, Interactor
-from core.pai import Param, Pai, FuroType, BasicFuro, Minkan, Ankan, Kakan, Tehai, \
+from .yama import YamaType, YoninYama
+from ..ext import tokens, support
+from ..ext.rule import BaseRules
+from ..ext.yaku import token_yaku_dict, token_koyaku_dict, Yaku
+from ..interface import Intent, Prompt, Interactor
+from ..pai import Param, Pai, FuroType, BasicFuro, Minkan, Ankan, Kakan, Tehai, \
                      get_agari_result_list, AgariResult, is_agari, is_tenpai, \
                      get_kuikae_list, strict_pick_pais_with_loose_equal, strict_remove, \
                      sanyuanpai_list, suushiipai_list
-from core.player import Player, players_dict, id_players_dict, get_ordered_players
-from core.types import *
+from ..player import Player, players_dict, id_players_dict, get_ordered_players
+from ..types import *
 
 class MotionTokens:
     motion_tsumo_normal: int = 1

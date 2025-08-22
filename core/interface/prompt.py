@@ -1,7 +1,7 @@
 from typing import Any
 
-from core.player import Player, id_players_dict
 from .intent import Intent, to_intent
+from ..player import Player, id_players_dict
 
 def to_prompt(dict1: dict[str, Any]):
     target_id = dict1.get('target-id')
