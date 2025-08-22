@@ -455,7 +455,6 @@ class PlayerRound:
 
     def kakan(self) -> "PlayerRound | RoundResult":
         """執行加槓牌流程"""
-        self.break_junme()
         self.player.player_junme += 1
         self.player.continued_kan_count += 1
         player = self.player
@@ -539,6 +538,9 @@ class PlayerRound:
                     )))
                 return self.ron(players_args, self.player, pai)
         
+        # 破巡
+        self.break_junme()
+        
         # 若上輪有明加槓，翻指示牌
         if self.prparam.player_last_motion in (MotionTokens.motion_minkan_rinshan, MotionTokens.motion_kakan_rinshan):
             self.flop_dora_hyouji()
@@ -551,7 +553,6 @@ class PlayerRound:
 
     def ankan(self) -> "PlayerRound | RoundResult":
         """執行暗槓牌流程"""
-        self.break_junme()
         self.player.player_junme += 1
         self.player.continued_kan_count += 1
         player = self.player
@@ -654,6 +655,9 @@ class PlayerRound:
                         )))
                     return self.ron(players_args, self.player, pai) 
         
+        # 破巡
+        self.break_junme()
+
         # 若上輪有明加槓，翻指示牌
         if self.prparam.player_last_motion in (MotionTokens.motion_minkan_rinshan, MotionTokens.motion_kakan_rinshan):
             self.flop_dora_hyouji()
@@ -907,7 +911,6 @@ class PlayerRound:
 
     def penuki(self) -> "PlayerRound | RoundResult":
         """執行拔北程序"""
-        self.break_junme()
         self.player.player_junme += 1
 
         pei_pai = Pai(support.token_yakuhai_painame_dict[tokens.yakuhai_pei])
@@ -976,6 +979,9 @@ class PlayerRound:
                         False, False
                     )))
                 return self.ron(players_args, self.player, pei_pai)
+        
+        # 破巡
+        self.break_junme()
         
         # 若上輪有明加槓，翻指示牌
         if self.prparam.player_last_motion in (MotionTokens.motion_minkan_rinshan, MotionTokens.motion_kakan_rinshan):
