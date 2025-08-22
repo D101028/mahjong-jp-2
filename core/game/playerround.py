@@ -11,7 +11,7 @@ from typing import Literal, Iterable
 from core.ext import tokens, support
 from core.ext.rule import BaseRules
 from core.ext.yaku import token_yaku_dict, token_koyaku_dict, Yaku
-from core.game.yama import YoninYama
+from core.game.yama import YamaType, YoninYama
 from core.interface import Intent, Prompt, Interactor
 from core.pai import Param, Pai, FuroType, BasicFuro, Minkan, Ankan, Kakan, Tehai, \
                      get_agari_result_list, AgariResult, is_agari, is_tenpai, \
@@ -50,6 +50,15 @@ class PlayerRoundParam:
             raise ValueError(f"Invalid player_last_motion: {player_last_motion}")
         self.player_last_motion = player_last_motion
         self.last_motion_furo = last_motion_furo
+    
+    @property
+    def is_rinshan(self) -> bool:
+        return self.player_last_motion in (
+            MotionTokens.motion_minkan_rinshan, 
+            MotionTokens.motion_kakan_rinshan, 
+            MotionTokens.motion_ankan_rinshan, 
+            MotionTokens.motion_penuki_rinshan
+        )
 
 class RoundResult:
     def __init__(
@@ -236,8 +245,8 @@ def get_sekininbarai(player: Player, agari_result: AgariResult) -> list[tuple[Pl
 
     return sekininbarai
 
-class YoninPlayerRound:
-    def __init__(self, player: Player, yama: YoninYama, chanfon: int, prparam: PlayerRoundParam) -> None:
+class PlayerRound:
+    def __init__(self, player: Player, yama: YamaType, chanfon: int, prparam: PlayerRoundParam) -> None:
         self.player = player
         self.yama = yama
         self.chanfon = chanfon
@@ -301,7 +310,7 @@ class YoninPlayerRound:
         for player in players_dict.values():
             player.is_junme_broken = True
 
-    def chi(self, player: Player, from_player: Player) -> 'YoninPlayerRound':
+    def chi(self, player: Player, from_player: Player) -> 'PlayerRound':
         """執行吃牌流程"""
         self.break_junme()
         pai = from_player.river.pai_list[-1]
@@ -343,13 +352,13 @@ class YoninPlayerRound:
                 'furo-info': furo.to_dict(), 
             })) for plyer in players_dict.values()]
             Interactor(prompts).communicate()
-            return YoninPlayerRound(player, self.yama, self.chanfon, PlayerRoundParam(
+            return PlayerRound(player, self.yama, self.chanfon, PlayerRoundParam(
                 MotionTokens.motion_chii, furo
             ))
         else:
             raise Exception(f"You cannot chii here! tehai: {player.tehai}; pai: {pai}")
     
-    def pon(self, player: Player, from_player: Player) -> 'YoninPlayerRound':
+    def pon(self, player: Player, from_player: Player) -> 'PlayerRound':
         """執行碰牌流程"""
         self.break_junme()
         pai = from_player.river.pai_list[-1]
@@ -378,11 +387,11 @@ class YoninPlayerRound:
             'furo-info': furo.to_dict(), 
         })) for plyer in players_dict.values()]
         Interactor(prompts).communicate()
-        return YoninPlayerRound(player, self.yama, self.chanfon, PlayerRoundParam(
+        return PlayerRound(player, self.yama, self.chanfon, PlayerRoundParam(
             MotionTokens.motion_pon, furo
         ))
     
-    def minkan(self, player: Player, from_player: Player) -> "YoninPlayerRound | RoundResult":
+    def minkan(self, player: Player, from_player: Player) -> "PlayerRound | RoundResult":
         """執行明槓牌流程"""
         self.break_junme()
         player.player_junme += 1
@@ -424,7 +433,7 @@ class YoninPlayerRound:
         
         # 摸嶺上牌
         self.draw_rinshan(player)
-        return YoninPlayerRound(player, self.yama, self.chanfon, PlayerRoundParam(
+        return PlayerRound(player, self.yama, self.chanfon, PlayerRoundParam(
             MotionTokens.motion_minkan_rinshan, furo
         ))
     
@@ -444,7 +453,7 @@ class YoninPlayerRound:
             ron_from_player=from_player
         )
 
-    def kakan(self) -> "YoninPlayerRound | RoundResult":
+    def kakan(self) -> "PlayerRound | RoundResult":
         """執行加槓牌流程"""
         self.break_junme()
         self.player.player_junme += 1
@@ -536,11 +545,11 @@ class YoninPlayerRound:
         
         # 摸嶺上牌
         self.draw_rinshan(player)
-        return YoninPlayerRound(player, self.yama, self.chanfon, PlayerRoundParam(
+        return PlayerRound(player, self.yama, self.chanfon, PlayerRoundParam(
             MotionTokens.motion_kakan_rinshan, furo
         ))
 
-    def ankan(self) -> "YoninPlayerRound | RoundResult":
+    def ankan(self) -> "PlayerRound | RoundResult":
         """執行暗槓牌流程"""
         self.break_junme()
         self.player.player_junme += 1
@@ -654,7 +663,7 @@ class YoninPlayerRound:
         
         # 摸嶺上牌
         self.draw_rinshan(player)
-        return YoninPlayerRound(player, self.yama, self.chanfon, PlayerRoundParam(
+        return PlayerRound(player, self.yama, self.chanfon, PlayerRoundParam(
             MotionTokens.motion_ankan_rinshan, furo
         ))
 
@@ -675,6 +684,8 @@ class YoninPlayerRound:
 
     def suukansanra_ryuukyoku_satisfied(self) -> bool:
         """檢查是否滿足四槓散了"""
+        if len(players_dict) <= 3:
+            return False
         if self.prparam.last_motion_furo not in (
             MotionTokens.motion_minkan_rinshan, MotionTokens.motion_ankan_rinshan, MotionTokens.motion_kakan_rinshan
         ):
@@ -693,10 +704,10 @@ class YoninPlayerRound:
             return True
         return False
 
-    def datsuhai_after(self, pai: Pai, is_to_riichi: bool = False) -> "YoninPlayerRound | RoundResult":
+    def datsuhai_after(self, pai: Pai, is_to_riichi: bool = False) -> "PlayerRound | RoundResult":
         """執行打完牌後的流程"""
         # 判斷四風連打
-        if all((plyer.player_junme == 1 and len(plyer.river.pai_list) == 1) for plyer in players_dict.values()) and self.player.menfon == tokens.pei:
+        if len(players_dict) >= 4 and all((plyer.player_junme == 1 and len(plyer.river.pai_list) == 1) for plyer in players_dict.values()) and self.player.menfon == tokens.pei:
             fonpais = tuple(Pai(name) for name in [support.token_yakuhai_painame_dict[t] for t in (tokens.yakuhai_ton, tokens.yakuhai_nan, tokens.yakuhai_shaa, tokens.yakuhai_pei)])
             if pai in fonpais and all(plyer.river.pai_list[0] == pai for plyer in get_ordered_players(self.player)):
                 return RoundResult(RoundResultTokens.suuhonrenta_ryuukyoku)
@@ -711,7 +722,7 @@ class YoninPlayerRound:
         )
         remaining = self.yama.get_remaining()
         is_last_player_round = remaining == 0
-        if not is_last_player_round and not suukansanra_satisfied and next_player.tehai.is_able_to_chi(pai):
+        if len(players_dict) >= 4 and not is_last_player_round and not suukansanra_satisfied and next_player.tehai.is_able_to_chi(pai):
             player_actions_dict[next_player].append('chi')
         for player in player_actions_dict:
             if not is_last_player_round and not suukansanra_satisfied:
@@ -850,11 +861,11 @@ class YoninPlayerRound:
                 )
         else:
             self.draw(next_player)
-            return YoninPlayerRound(next_player, self.yama, self.chanfon, PlayerRoundParam(
+            return PlayerRound(next_player, self.yama, self.chanfon, PlayerRoundParam(
                 MotionTokens.motion_tsumo_normal
             ))
 
-    def riichi(self, original_choices: list[Literal['ankan', 'kakan', 'penuki', 'tsumo', 'kyuushukyuhai', 'riichi', 'cancel']]) -> "YoninPlayerRound | RoundResult":
+    def riichi(self, original_choices: list[Literal['ankan', 'kakan', 'penuki', 'tsumo', 'kyuushukyuhai', 'riichi', 'cancel']]) -> "PlayerRound | RoundResult":
         """執行立直打牌流程"""
         # riichi
         new_pai = self.player.tehai.new_pai
@@ -889,9 +900,94 @@ class YoninPlayerRound:
                 'datsuhai': pai.to_dict(), 
                 'to-riichi': True
             })) for plyer in players_dict.values()]).communicate()
+            # 四家立直流局
+            if sum((plyer.riichi_junme is not None) for plyer in players_dict.values()) >= 4:
+                return RoundResult(RoundResultTokens.suuchariichi_ryuukyoku)
             return self.datsuhai_after(pai, True)
 
-    def ask_and_execute(self, choices: list[Literal['ankan', 'kakan', 'penuki', 'tsumo', 'kyuushukyuhai', 'riichi', 'cancel']]) -> "YoninPlayerRound | RoundResult":
+    def penuki(self) -> "PlayerRound | RoundResult":
+        """執行拔北程序"""
+        self.break_junme()
+        self.player.player_junme += 1
+
+        pei_pai = Pai(support.token_yakuhai_painame_dict[tokens.yakuhai_pei])
+        self.player.tehai.pai_list = self.player.tehai.pai_list + [self.player.tehai.new_pai] if self.player.tehai.new_pai is not None else self.player.tehai.pai_list
+        
+        # 可拔的牌
+        penukihai_choices = strict_pick_pais_with_loose_equal(self.player.tehai.pai_list, pei_pai)
+        if len(penukihai_choices) >= 2:
+            ans = Interactor([Prompt(self.player, Intent('standard', 'ask-to-choose-minpai-comb-content-type', {
+                'pai-comb-list': [[p.to_dict()] for p in penukihai_choices]
+            }))]).communicate()[0]
+            pei_pai = penukihai_choices[int(ans)]
+        elif not penukihai_choices:
+            raise Exception(f"You have no pei pai to penuki! Tehai: {self.player.tehai}")
+        else:
+            pei_pai = self.player.tehai.pai_list[self.player.tehai.pai_list.index(pei_pai)]
+        
+        # 拔牌
+        strict_remove(self.player.tehai.pai_list, pei_pai)
+        self.player.tehai.penuki_list.append(pei_pai)
+        Interactor([Prompt(plyer, Intent('no-response', 'player-penuki-notation', {
+            'player-id': self.player.ID, 
+            'penuki-pai': pei_pai.to_dict()
+        })) for plyer in players_dict.values()])
+        
+        # 檢查搶槓
+        ordered_players: list[Player] = get_ordered_players(self.player)
+        chyankan_players: list[Player] = []
+        for plyer in ordered_players:
+            if plyer.is_able_to_ron(pei_pai, Param(
+                plyer.riichi_junme, plyer.player_junme, 'ron', 
+                plyer.is_junme_broken, True, self.yama.get_remaining(), 
+                plyer.menfon, self.chanfon, False, 
+                self.yama.dora_hyouji.get_dora_hyoujis(), self.yama.dora_hyouji.get_ura_hyoujis(), 
+                False, False
+            )):
+                chyankan_players.append(plyer)
+        if chyankan_players:
+            answers = Interactor([Prompt(plyer, Intent('standard', 'ask-to-choices', {
+                'choices': ['ron', 'cancel']
+            })) for plyer in chyankan_players]).communicate()
+            ron_players: list[Player] = []
+            for idx, ans in enumerate(answers):
+                plyer = chyankan_players[idx]
+                pos = int(ans)
+                if pos == 1: # choose 'cancel'
+                    # 振聽處理
+                    plyer.doujin_furiten_pais.add(pei_pai) # 同巡振聽
+                    if plyer.is_riichi:
+                        plyer.is_riichi_furiten = True # 立直振聽
+                else: # choose 'ron'
+                    ron_players.append(plyer)
+            if ron_players:
+                if len(ron_players) == 3 and not BaseRules.atamahane_enabled:
+                    roundresult = RoundResult(RoundResultTokens.sanchahoo_ryuukyoku)
+                    return roundresult
+                if BaseRules.atamahane_enabled:
+                    ron_players = ron_players[:1]
+                players_args: list[tuple[Player, Param]] = []
+                for ron_player in ron_players:
+                    players_args.append((ron_player, Param(
+                        ron_player.riichi_junme, ron_player.player_junme, 'ron', 
+                        ron_player.is_junme_broken, True, self.yama.get_remaining(), 
+                        ron_player.menfon, self.chanfon, False, 
+                        self.yama.dora_hyouji.get_dora_hyoujis(), self.yama.dora_hyouji.get_ura_hyoujis(), 
+                        False, False
+                    )))
+                return self.ron(players_args, self.player, pei_pai)
+        
+        # 若上輪有明加槓，翻指示牌
+        if self.prparam.player_last_motion in (MotionTokens.motion_minkan_rinshan, MotionTokens.motion_kakan_rinshan):
+            self.flop_dora_hyouji()
+        
+        # 摸嶺上牌
+        self.draw_rinshan(self.player)
+        return PlayerRound(self.player, self.yama, self.chanfon, PlayerRoundParam(
+            MotionTokens.motion_penuki_rinshan, None
+        ))
+
+    def ask_and_execute(self, choices: list[Literal['ankan', 'kakan', 'penuki', 'tsumo', 'kyuushukyuhai', 'riichi', 'cancel']]) -> "PlayerRound | RoundResult":
         """詢問直接打牌或者選擇 choices 選項並執行"""
         datsuhai_choices = [i for i in range(len(self.player.tehai.pai_list))] + [None]
         ans = Interactor([Prompt(self.player, Intent('standard', 'ask-to-datsuhai-or-other-choices', {
@@ -910,6 +1006,8 @@ class YoninPlayerRound:
                     return self.ankan()
                 case 'kakan':
                     return self.kakan()
+                case 'penuki':
+                    return self.penuki()
                 case 'kyuushukyuhai':
                     return RoundResult(
                         RoundResultTokens.kyuushukyuhai_ryuukyoku, 
@@ -919,11 +1017,8 @@ class YoninPlayerRound:
                     return self.tsumo(Param(
                         self.player.riichi_junme, self.player.player_junme, 'tsumo', 
                         self.player.is_junme_broken, False, self.yama.get_remaining(), 
-                        self.player.menfon, self.chanfon, self.prparam.player_last_motion in (
-                            MotionTokens.motion_minkan_rinshan, 
-                            MotionTokens.motion_kakan_rinshan, 
-                            MotionTokens.motion_ankan_rinshan
-                        ), self.yama.dora_hyouji.get_dora_hyoujis(), self.yama.dora_hyouji.get_ura_hyoujis(), 
+                        self.player.menfon, self.chanfon, self.prparam.is_rinshan, 
+                        self.yama.dora_hyouji.get_dora_hyoujis(), self.yama.dora_hyouji.get_ura_hyoujis(), 
                         False, False
                     ))
                 case 'riichi':
@@ -944,7 +1039,7 @@ class YoninPlayerRound:
             })) for plyer in players_dict.values()]).communicate()
             return self.datsuhai_after(pai)
 
-    def run(self) -> "YoninPlayerRound | RoundResult":
+    def run(self) -> "PlayerRound | RoundResult":
         """Run the round and return next round or RoundResult if it's the last player round"""
         last_motion = self.prparam.player_last_motion
         if last_motion in (MotionTokens.motion_chii, MotionTokens.motion_pon):
@@ -962,10 +1057,8 @@ class YoninPlayerRound:
         elif last_motion in (MotionTokens.motion_tsumo_normal, 
                              MotionTokens.motion_minkan_rinshan, 
                              MotionTokens.motion_kakan_rinshan, 
-                             MotionTokens.motion_ankan_rinshan):
-            is_rinshan: bool = last_motion in (MotionTokens.motion_minkan_rinshan, 
-                                               MotionTokens.motion_kakan_rinshan, 
-                                               MotionTokens.motion_ankan_rinshan)
+                             MotionTokens.motion_ankan_rinshan, 
+                             MotionTokens.motion_penuki_rinshan):
             new_pai = self.player.tehai.new_pai
             if new_pai is None:
                 raise Exception("Missing new_pai in tehai")
@@ -973,7 +1066,7 @@ class YoninPlayerRound:
             param = Param(
                 self.player.riichi_junme, self.player.player_junme, 'tsumo', 
                 self.player.is_junme_broken, False, self.yama.get_remaining(), 
-                self.player.menfon, self.chanfon, is_rinshan, 
+                self.player.menfon, self.chanfon, self.prparam.is_rinshan, 
                 self.yama.dora_hyouji.get_dora_hyoujis(), self.yama.dora_hyouji.get_ura_hyoujis(), 
                 False, False
             )
@@ -1016,6 +1109,10 @@ class YoninPlayerRound:
             ## 判斷暗槓
             if any(full_pai_list.count(p) >= 4 for p in full_pai_list):
                 choices.append('ankan')
+            ## 判斷拔北
+            pei_pai = Pai(support.token_yakuhai_painame_dict[tokens.yakuhai_pei])
+            if len(players_dict) <= 3 and pei_pai in full_pai_list:
+                choices.append('penuki')
             ## 判斷九種九牌
             if self.player.player_junme == 0 and not self.player.is_junme_broken:
                 counted_set: set[Pai] = set()
@@ -1044,7 +1141,7 @@ class YoninPlayerRound:
         else:
             raise ValueError(f"Invalid token of prparam.player_last_motion: {last_motion}")
     
-    def debug_skip(self) -> "YoninPlayerRound | RoundResult":
+    def debug_skip(self) -> "PlayerRound | RoundResult":
         """直接摸切(或者打 tehai.pai_list 的最後一張)，並跳過所有玩家選擇，然後下家摸牌或者流局/流滿結束"""
         if self.player.tehai.new_pai is None:
             pai = self.player.datsuhai(len(self.player.tehai.pai_list)-1)
@@ -1108,6 +1205,6 @@ class YoninPlayerRound:
                 )
         else:
             self.draw(next_player)
-            return YoninPlayerRound(next_player, self.yama, self.chanfon, PlayerRoundParam(
+            return PlayerRound(next_player, self.yama, self.chanfon, PlayerRoundParam(
                 MotionTokens.motion_tsumo_normal
             ))
