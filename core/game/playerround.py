@@ -1079,11 +1079,7 @@ class PlayerRound:
             # 打牌
             pai = self.ask_and_datsuhai(kuikae_list)
             return self.datsuhai_after(pai)
-        elif last_motion in (MotionTokens.motion_tsumo_normal, 
-                             MotionTokens.motion_minkan_rinshan, 
-                             MotionTokens.motion_kakan_rinshan, 
-                             MotionTokens.motion_ankan_rinshan, 
-                             MotionTokens.motion_penuki_rinshan):
+        elif last_motion in (MotionTokens.motion_tsumo_normal, MotionTokens.motion_minkan_rinshan, MotionTokens.motion_kakan_rinshan, MotionTokens.motion_ankan_rinshan, MotionTokens.motion_penuki_rinshan):
             new_pai = self.player.tehai.new_pai
             if new_pai is None:
                 raise Exception("Missing new_pai in tehai")
