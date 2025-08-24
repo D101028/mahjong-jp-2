@@ -14,7 +14,7 @@ from ..ext.rule import BaseRules
 from ..ext.yaku import token_yaku_dict, token_koyaku_dict, Yaku
 from ..interface import Intent, Prompt, Interactor
 from ..pai import Param, Pai, FuroType, BasicFuro, Minkan, Ankan, Kakan, Tehai, \
-                     get_agari_result_list, AgariResult, is_agari, is_tenpai, \
+                     get_agari_result_list, AgariResult, is_agari, is_tenpai, get_tenpai_list, \
                      get_kuikae_list, strict_pick_pais_with_loose_equal, strict_remove, \
                      sanyuanpai_list, suushiipai_list
 from ..player import Player, players_dict, id_players_dict, get_ordered_players
@@ -551,7 +551,7 @@ class PlayerRound:
             MotionTokens.motion_kakan_rinshan, furo
         ))
 
-    def ankan(self) -> "PlayerRound | RoundResult":
+    def ankan(self, strick_ankan_set: set[Pai] | None = None) -> "PlayerRound | RoundResult":
         """執行暗槓牌流程"""
         self.player.player_junme += 1
         self.player.continued_kan_count += 1
@@ -563,14 +563,17 @@ class PlayerRound:
         player.tehai.new_pai = None
         
         # 蒐集可以暗槓的牌
-        ankan_pai_set: set[Pai] = set()
-        for p in player.tehai.pai_list:
-            if p in ankan_pai_set:
-                continue
-            if player.tehai.pai_list.count(p) >= 4:
-                ankan_pai_set.add(p)
-        if not ankan_pai_set:
-            raise Exception(f"You cannot ankan here! tehai: {player.tehai}")
+        if strick_ankan_set is None:
+            ankan_pai_set: set[Pai] = set()
+            for p in player.tehai.pai_list:
+                if p in ankan_pai_set:
+                    continue
+                if player.tehai.pai_list.count(p) >= 4:
+                    ankan_pai_set.add(p)
+            if not ankan_pai_set:
+                raise Exception(f"You cannot ankan here! tehai: {player.tehai}")
+        else:
+            ankan_pai_set = strick_ankan_set
         
         # 取得暗槓哪張牌
         choices: list[tuple[Pai, ...]] = []
@@ -914,27 +917,41 @@ class PlayerRound:
         self.player.player_junme += 1
 
         pei_pai = Pai(support.token_yakuhai_painame_dict[tokens.yakuhai_pei])
-        self.player.tehai.pai_list = self.player.tehai.pai_list + [self.player.tehai.new_pai] if self.player.tehai.new_pai is not None else self.player.tehai.pai_list
         
         # 可拔的牌
-        penukihai_choices = strict_pick_pais_with_loose_equal(self.player.tehai.pai_list, pei_pai)
-        if len(penukihai_choices) >= 2:
-            ans = Interactor([Prompt(self.player, Intent('standard', 'ask-to-choose-minpai-comb-content-type', {
-                'pai-comb-list': [[p.to_dict()] for p in penukihai_choices]
-            }))]).communicate()[0]
-            pei_pai = penukihai_choices[int(ans)]
-        elif not penukihai_choices:
-            raise Exception(f"You have no pei pai to penuki! Tehai: {self.player.tehai}")
-        else:
-            pei_pai = self.player.tehai.pai_list[self.player.tehai.pai_list.index(pei_pai)]
+        if self.player.is_riichi:
+            if self.player.tehai.new_pai is None or self.player.tehai.new_pai != pei_pai:
+                raise Exception("You can't penuki here!")
+
+            # 拔牌
+            self.player.tehai.penuki_list.append(self.player.tehai.new_pai)
+            self.player.tehai.new_pai = None
+            Interactor([Prompt(plyer, Intent('no-response', 'player-penuki-notation', {
+                'player-id': self.player.ID, 
+                'penuki-pai': pei_pai.to_dict()
+            })) for plyer in players_dict.values()])
         
-        # 拔牌
-        strict_remove(self.player.tehai.pai_list, pei_pai)
-        self.player.tehai.penuki_list.append(pei_pai)
-        Interactor([Prompt(plyer, Intent('no-response', 'player-penuki-notation', {
-            'player-id': self.player.ID, 
-            'penuki-pai': pei_pai.to_dict()
-        })) for plyer in players_dict.values()])
+        else:
+            self.player.tehai.pai_list = self.player.tehai.pai_list + [self.player.tehai.new_pai] if self.player.tehai.new_pai is not None else self.player.tehai.pai_list
+            self.player.tehai.new_pai = None
+            penukihai_choices = strict_pick_pais_with_loose_equal(self.player.tehai.pai_list, pei_pai)
+            if len(penukihai_choices) >= 2:
+                ans = Interactor([Prompt(self.player, Intent('standard', 'ask-to-choose-minpai-comb-content-type', {
+                    'pai-comb-list': [[p.to_dict()] for p in penukihai_choices]
+                }))]).communicate()[0]
+                pei_pai = penukihai_choices[int(ans)]
+            elif not penukihai_choices:
+                raise Exception(f"You have no pei pai to penuki! Tehai: {self.player.tehai}")
+            else:
+                pei_pai = self.player.tehai.pai_list[self.player.tehai.pai_list.index(pei_pai)]
+            
+            # 拔牌
+            strict_remove(self.player.tehai.pai_list, pei_pai)
+            self.player.tehai.penuki_list.append(pei_pai)
+            Interactor([Prompt(plyer, Intent('no-response', 'player-penuki-notation', {
+                'player-id': self.player.ID, 
+                'penuki-pai': pei_pai.to_dict()
+            })) for plyer in players_dict.values()])
         
         # 檢查搶槓
         ordered_players: list[Player] = get_ordered_players(self.player)
@@ -993,7 +1010,9 @@ class PlayerRound:
             MotionTokens.motion_penuki_rinshan, None
         ))
 
-    def ask_and_execute(self, choices: list[Literal['ankan', 'kakan', 'penuki', 'tsumo', 'kyuushukyuhai', 'riichi', 'cancel']]) -> "PlayerRound | RoundResult":
+    def ask_and_execute(self, 
+                        choices: list[Literal['ankan', 'kakan', 'penuki', 'tsumo', 'kyuushukyuhai', 'riichi', 'cancel']], 
+                        strict_ankan_set: set[Pai] | None = None) -> "PlayerRound | RoundResult":
         """詢問直接打牌或者選擇 choices 選項並執行"""
         datsuhai_choices = [i for i in range(len(self.player.tehai.pai_list))] + [None]
         ans = Interactor([Prompt(self.player, Intent('standard', 'ask-to-datsuhai-or-other-choices', {
@@ -1009,7 +1028,7 @@ class PlayerRound:
                     pai = self.ask_and_datsuhai()
                     return self.datsuhai_after(pai)
                 case 'ankan':
-                    return self.ankan()
+                    return self.ankan(strict_ankan_set)
                 case 'kakan':
                     return self.kakan()
                 case 'penuki':
@@ -1077,73 +1096,120 @@ class PlayerRound:
                 False, False
             )
 
-            # 判斷/執行 自摸、加槓、暗槓、九種九牌、立直打牌
-            choices: list[Literal['ankan', 'kakan', 'penuki', 'tsumo', 'kyuushukyuhai', 'riichi', 'cancel']] = []
-            ## 判斷自摸
-            if is_agari(full_pai_list):
-                if self.player.player_junme == 0 and not self.player.is_junme_broken and support.fonwei_tuple.index(self.player.menfon) == 0:
-                    # 東家第一輪，手牌中任意牌皆可做為自摸牌
-                    pai_strict_list: list[Pai] = []
-                    for p in full_pai_list:
-                        if any(p.equal(p1) for p1 in pai_strict_list):
-                            continue
-                        else:
-                            pai_strict_list.append(p)
-
-                    maximum: int | float = -float('inf')
-                    max_idx: int | None = None
-                    for idx, p in enumerate(pai_strict_list):
-                        copied_list = full_pai_list.copy()
-                        strict_remove(copied_list, p)
-                        tehai = Tehai(copied_list)
-                        tehai.new_pai = p
-                        result_list = get_agari_result_list(tehai, p, param)
-                        if not result_list:
-                            continue
-                        result = max(result_list, key=lambda result: result.all_tensuu)
-                        if result.all_tensuu >= maximum:
-                            maximum = result.all_tensuu
-                            max_idx = idx
-                            self.player.tehai = tehai
-                    if max_idx is not None:
+            # 若有立直，則另外處理
+            if self.player.is_riichi:
+                # 判斷/執行 自摸、加槓、暗槓、九種九牌、立直打牌
+                choices: list[Literal['ankan', 'kakan', 'penuki', 'tsumo', 'kyuushukyuhai', 'riichi', 'cancel']] = []
+            
+                ## 判斷自摸
+                if is_agari(full_pai_list):
+                    if get_agari_result_list(self.player.tehai, new_pai, param):
                         choices.append('tsumo')
-                elif get_agari_result_list(self.player.tehai, new_pai, param):
-                    choices.append('tsumo')
-            ## 判斷加槓
-            if any((furo.pai_tuple[0] in full_pai_list) for furo in self.player.tehai.furo_list if furo.type == tokens.koutsu):
-                choices.append('kakan')
-            ## 判斷暗槓
-            if any(full_pai_list.count(p) >= 4 for p in full_pai_list):
-                choices.append('ankan')
-            ## 判斷拔北
-            pei_pai = Pai(support.token_yakuhai_painame_dict[tokens.yakuhai_pei])
-            if len(players_dict) <= 3 and pei_pai in full_pai_list:
-                choices.append('penuki')
-            ## 判斷九種九牌
-            if self.player.player_junme == 0 and not self.player.is_junme_broken:
-                counted_set: set[Pai] = set()
-                count = 0
-                for p in full_pai_list:
-                    if p.is_yaochuu and p not in counted_set:
-                        counted_set.add(p)
-                        count += 1
-                if count >= 9:
-                    choices.append('kyuushukyuhai')
-            ## 判斷立直
-            if self.yama.get_remaining() >= len(players_dict) and self.player.is_able_to_riichi():
-                choices.append('riichi')
-            ## 詢問/執行
-            if choices:
-                choices.append('cancel')
-                return self.ask_and_execute(choices)
+                ## 判斷暗槓
+                if any(full_pai_list.count(p) >= 4 for p in full_pai_list):
+                    tenpais = self.player.tehai.get_tenpais()
+                    # 蒐集可以暗槓的牌
+                    ankan_pai_set: set[Pai] = set()
+                    tenpais = sorted(self.player.tehai.get_tenpais(), key=lambda p: p.int_sign())
+                    for p in full_pai_list:
+                        if p in ankan_pai_set:
+                            continue
+                        if full_pai_list.count(p) >= 4:
+                            copied_list = full_pai_list.copy()
+                            copied_list.remove(p)
+                            new_tenpais = sorted(get_tenpai_list(copied_list), key=lambda p: p.int_sign())
+                            if tenpais == new_tenpais:
+                                ankan_pai_set.add(p)
+                    if ankan_pai_set:
+                        choices.append('ankan')
+                ## 判斷拔北
+                pei_pai = Pai(support.token_yakuhai_painame_dict[tokens.yakuhai_pei])
+                if len(players_dict) <= 3 and new_pai == pei_pai:
+                    choices.append('penuki')
+                ## 詢問/執行
+                if choices:
+                    choices.append('cancel')
+                    return self.ask_and_execute(choices, ankan_pai_set)
 
-            # 若上輪是明加槓，開指示牌
-            if last_motion in (MotionTokens.motion_minkan_rinshan, MotionTokens.motion_kakan_rinshan):
-                self.flop_dora_hyouji()
+                # 打牌
+                pai = self.player.datsuhai(None)
+                # 播送
+                Interactor([Prompt(self.player, Intent('no-response', 'player-tehai-update-notation', {
+                    'tehai-info': self.player.tehai.to_dict()
+                }))] + [Prompt(player, Intent('no-response', 'player-datsuhai-notation', {
+                    "player-id": self.player.ID, 
+                    "datsuhai": pai.to_dict(), 
+                    "to-riichi": False
+                })) for player in players_dict.values()]).communicate()
+                return self.datsuhai_after(pai)
+            else:
+                # 判斷/執行 自摸、加槓、暗槓、九種九牌、立直打牌
+                choices: list[Literal['ankan', 'kakan', 'penuki', 'tsumo', 'kyuushukyuhai', 'riichi', 'cancel']] = []
+                ## 判斷自摸
+                if is_agari(full_pai_list):
+                    if self.player.player_junme == 0 and not self.player.is_junme_broken and support.fonwei_tuple.index(self.player.menfon) == 0:
+                        # 東家第一輪，手牌中任意牌皆可做為自摸牌
+                        pai_strict_list: list[Pai] = []
+                        for p in full_pai_list:
+                            if any(p.equal(p1) for p1 in pai_strict_list):
+                                continue
+                            else:
+                                pai_strict_list.append(p)
 
-            # 打牌
-            pai = self.ask_and_datsuhai()
-            return self.datsuhai_after(pai)
+                        maximum: int | float = -float('inf')
+                        max_idx: int | None = None
+                        for idx, p in enumerate(pai_strict_list):
+                            copied_list = full_pai_list.copy()
+                            strict_remove(copied_list, p)
+                            tehai = Tehai(copied_list)
+                            tehai.new_pai = p
+                            result_list = get_agari_result_list(tehai, p, param)
+                            if not result_list:
+                                continue
+                            result = max(result_list, key=lambda result: result.all_tensuu)
+                            if result.all_tensuu >= maximum:
+                                maximum = result.all_tensuu
+                                max_idx = idx
+                                self.player.tehai = tehai
+                        if max_idx is not None:
+                            choices.append('tsumo')
+                    elif get_agari_result_list(self.player.tehai, new_pai, param):
+                        choices.append('tsumo')
+                ## 判斷加槓
+                if any((furo.pai_tuple[0] in full_pai_list) for furo in self.player.tehai.furo_list if furo.type == tokens.koutsu):
+                    choices.append('kakan')
+                ## 判斷暗槓
+                if any(full_pai_list.count(p) >= 4 for p in full_pai_list):
+                    choices.append('ankan')
+                ## 判斷拔北
+                pei_pai = Pai(support.token_yakuhai_painame_dict[tokens.yakuhai_pei])
+                if len(players_dict) <= 3 and pei_pai in full_pai_list:
+                    choices.append('penuki')
+                ## 判斷九種九牌
+                if self.player.player_junme == 0 and not self.player.is_junme_broken:
+                    counted_set: set[Pai] = set()
+                    count = 0
+                    for p in full_pai_list:
+                        if p.is_yaochuu and p not in counted_set:
+                            counted_set.add(p)
+                            count += 1
+                    if count >= 9:
+                        choices.append('kyuushukyuhai')
+                ## 判斷立直
+                if self.yama.get_remaining() >= len(players_dict) and self.player.is_able_to_riichi():
+                    choices.append('riichi')
+                ## 詢問/執行
+                if choices:
+                    choices.append('cancel')
+                    return self.ask_and_execute(choices)
+
+                # 若上輪是明加槓，開指示牌
+                if last_motion in (MotionTokens.motion_minkan_rinshan, MotionTokens.motion_kakan_rinshan):
+                    self.flop_dora_hyouji()
+
+                # 打牌
+                pai = self.ask_and_datsuhai()
+                return self.datsuhai_after(pai)
         else:
             raise ValueError(f"Invalid token of prparam.player_last_motion: {last_motion}")
     

@@ -4,7 +4,7 @@
 「junme」計數：玩家初始 junme 為 0，每打出一張牌會 +1。
 """
 
-from typing import Literal, Iterable, overload
+from typing import Literal, Iterable, overload, Sequence
 
 from .ext import support, yaku, tokens
 from .ext.index import *
@@ -267,27 +267,27 @@ def get_mentsu(pai_list: list[Pai]) -> Mentsu:
         return Mentsu(tokens.koutsu, pai_list)
 
 class Toitsu:
-    def __init__(self, pai: Pai | None = None, pai_list: list[Pai] | None = None) -> None:
-        self.pai_list: list[Pai]
+    def __init__(self, pai: Pai | None = None, pais: Sequence[Pai] | None = None) -> None:
+        self.pai_tuple: tuple[Pai, Pai]
         if pai is None:
-            if pai_list is None:
+            if pais is None:
                 raise ValueError("`pai` and `pai_list` could not be None at the same time.")
             else:
-                self.pai_list = pai_list
+                self.pai_tuple = (pais[0], pais[1])
         else:
-            self.pai_list = [pai, pai.copy()]
+            self.pai_tuple = (pai, pai.copy())
     
     def __eq__(self, other) -> bool:
         if not isinstance(other, Toitsu):
             return False
-        return self.pai_list[0] == other.pai_list[0]
+        return self.pai_tuple[0] == other.pai_tuple[0]
 
     def __str__(self) -> str:
-        output = "(" + " ".join([str(p.name) for p in self.pai_list]) + ")"
+        output = "(" + " ".join([str(p.name) for p in self.pai_tuple]) + ")"
         return f"<Toitsu {output}>"
 
     def copy(self) -> 'Toitsu':
-        return Toitsu(pai_list=[p.copy() for p in self.pai_list])
+        return Toitsu(pais=[p.copy() for p in self.pai_tuple])
 
 def to_furo(arg: FuroDictType):
     if not is_same_dict_type(arg, FuroDictType):
@@ -485,7 +485,7 @@ class AgariComb:
         output = ""
         output += f"{tokens.to_lang(self.hoora_type)}: "
         for t in self.toitsu_list:
-            output += "(" + ",".join([str(p.name) for p in t.pai_list]) + ")"
+            output += "(" + ",".join([str(p.name) for p in t.pai_tuple]) + ")"
         output += " | "
         for m in self.mentsu_list:
             output += "(" + ",".join([str(p.name) for p in m.pai_list]) + ")"
@@ -500,7 +500,7 @@ class AgariComb:
                     self.akadora_list.append(p.copy())
                     p.normalize()
         for t in self.toitsu_list:
-            for p in t.pai_list:
+            for p in t.pai_tuple:
                 if p.is_akadora:
                     self.akadora_list.append(p.copy())
                     p.normalize()
@@ -553,7 +553,7 @@ class TehaiComb:
         output = ""
         output += f"{tokens.to_lang(self.tenpai_type)}："
         for t in self.toitsu_list:
-            output += "(" + ",".join([str(p.name) for p in t.pai_list]) + ")"
+            output += "(" + ",".join([str(p.name) for p in t.pai_tuple]) + ")"
         output += " | "
         for m in self.mentsu_list:
             output += "(" + ",".join([str(p.name) for p in m.pai_list]) + ")"
@@ -577,7 +577,7 @@ class TehaiComb:
             if len(list_copy) == 0:
                 return
         for t in self.toitsu_list:
-            for p in t.pai_list:
+            for p in t.pai_tuple:
                 if p in list_copy:
                     list_copy.remove(p)
                     p.to_akadora()
@@ -599,7 +599,7 @@ class TehaiComb:
         for m in self.mentsu_list:
             output += m.pai_list
         for t in self.toitsu_list:
-            output += t.pai_list
+            output += t.pai_tuple
         for f in self.furo_list:
             output += list(f.pai_tuple)
         output += self.tanhai_list
@@ -762,12 +762,12 @@ def get_agari_comb_list(pai_list: list[Pai]) -> list[AgariComb]:
         a1.remove(x)
         a1.remove(x)
         if len(a1) == 0:
-            comb = AgariComb(tokens.normal_agari_type, [], [Toitsu(pai_list=[x.copy(), x.copy()])], [], akadora_list)
+            comb = AgariComb(tokens.normal_agari_type, [], [Toitsu(pais=[x.copy(), x.copy()])], [], akadora_list)
             result.append(comb)
             break
         mentsu_comb_list = create_mentsu_comb_list(a1)
         for comb in mentsu_comb_list:
-            comb = AgariComb(tokens.normal_agari_type, comb, [Toitsu(pai_list=[x.copy(), x.copy()])], [], akadora_list=akadora_list)
+            comb = AgariComb(tokens.normal_agari_type, comb, [Toitsu(pais=[x.copy(), x.copy()])], [], akadora_list=akadora_list)
             result.append(comb)
         # 重製
         a1 = all_pai.copy()
@@ -866,7 +866,7 @@ class Tehai:
                     elif tanhai_list.count(p) == 0: # 國士十三面聽
                         tehai_comb_list.append(TehaiComb(tokens.kokushimusoujuusanmenmachi, 
                                                          p, 
-                                                         [agari_comb.toitsu_list[0].pai_list[0].copy()], 
+                                                         [agari_comb.toitsu_list[0].pai_tuple[0].copy()], 
                                                          toitsu_list=[], 
                                                          tanhai_list=tanhai_list))
                 elif agari_comb.hoora_type == tokens.chiitoitsu_agari_type: # 七對子型
@@ -879,7 +879,7 @@ class Tehai:
                                                      akadora_revise_list=agari_comb.akadora_list))
                 elif agari_comb.hoora_type == tokens.normal_agari_type: # 普通型
                     for t in toitsu_list: # 單騎聽
-                        if p in t.pai_list:
+                        if p in t.pai_tuple:
                             toitsu_list_copy = [t0.copy() for t0 in toitsu_list]
                             toitsu_list_copy.remove(Toitsu(p))
                             tehai_comb_list.append(TehaiComb(tokens.tankimachi, 
@@ -1212,7 +1212,7 @@ def get_fusuu(yaku_list: list[Yaku], tehai_comb: TehaiComb, param: Param, is_men
     if tehai_comb.tenpai_type in (tokens.kanchoomachi, tokens.tankimachi, tokens.henchoomachi): # 中洞、邊獨、單騎聽牌
         fu += 2
     # 面子和雀頭加符
-    toitsu_pai: Pai = tehai_comb.tenpai if tehai_comb.tenpai_type == tokens.tankimachi else tehai_comb.toitsu_list[0].pai_list[0]
+    toitsu_pai: Pai = tehai_comb.tenpai if tehai_comb.tenpai_type == tokens.tankimachi else tehai_comb.toitsu_list[0].pai_tuple[0]
     minkou_pai: list[Pai] = []
     ankou_pai: list[Pai] = []
     minkan_pai: list[Pai] = []
@@ -1399,7 +1399,7 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
                                          support.token_yakuhai_painame_dict[tokens.yakuhai_chun])]
         if all((
             tehai_comb.tenpai_type == tokens.ryanmenmachi, # 兩面聽
-            toitsu_list[0].pai_list[0] not in yakuhai_list, # 無役牌對子
+            toitsu_list[0].pai_tuple[0] not in yakuhai_list, # 無役牌對子
             len(shuntsu_list) == 4 # 四個順子
         )):
             result.append(token_yaku_dict[tokens.pinfu])
@@ -1486,9 +1486,9 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
                 break
 
     # 混全、純全
-    if all(t.pai_list[0].is_yaochuu for t in toitsu_list):
+    if all(t.pai_tuple[0].is_yaochuu for t in toitsu_list):
         if all(any(p.is_yaochuu for p in m.pai_list) for m in mentsu_furo_list):
-            if all(t.pai_list[0] in chinroutoupai_list for t in toitsu_list) and all(any(p in chinroutoupai_list for p in m.pai_list) for m in mentsu_furo_list):
+            if all(t.pai_tuple[0] in chinroutoupai_list for t in toitsu_list) and all(any(p in chinroutoupai_list for p in m.pai_list) for m in mentsu_furo_list):
                 result.append(token_yaku_dict[tokens.junchantaiyaochuu])
             else:
                 result.append(token_yaku_dict[tokens.honchantaiyaochuu])
@@ -1546,9 +1546,9 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
             result.append(token_yaku_dict[tokens.sankantsu])
 
     # 小三元
-    if toitsu_list[0].pai_list[0] in sanyuanpai_list:
+    if toitsu_list[0].pai_tuple[0] in sanyuanpai_list:
         list_copy = sanyuanpai_list.copy()
-        list_copy.remove(toitsu_list[0].pai_list[0])
+        list_copy.remove(toitsu_list[0].pai_tuple[0])
         for m in koutsu_list:
             pai = m.pai_list[0]
             if pai in list_copy:
@@ -1586,9 +1586,9 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
             result.append(token_yaku_dict[tokens.daisangen])
 
     # 小四喜
-    if len(koutsu_list) >= 3 and toitsu_list[0].pai_list[0] in suushiipai_list:
+    if len(koutsu_list) >= 3 and toitsu_list[0].pai_tuple[0] in suushiipai_list:
         suushiipai_list_copy = suushiipai_list.copy()
-        suushiipai_list_copy.remove(toitsu_list[0].pai_list[0])
+        suushiipai_list_copy.remove(toitsu_list[0].pai_tuple[0])
         for m in koutsu_list:
             if m.pai_list[0] in suushiipai_list_copy:
                 suushiipai_list_copy.remove(m.pai_list[0])
@@ -1623,8 +1623,8 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
             result.append(token_koyaku_dict[tokens.shiiaruraotai])
         
         # 小三風
-        if EnabledKoyaku.shousanfon and len(toitsu_list) == 1 and toitsu_list[0].pai_list[0] in suushiipai_list and len(koutsu_list) >= 2:
-            suushi_set: set[Pai] = set((toitsu_list[0].pai_list[0], ))
+        if EnabledKoyaku.shousanfon and len(toitsu_list) == 1 and toitsu_list[0].pai_tuple[0] in suushiipai_list and len(koutsu_list) >= 2:
+            suushi_set: set[Pai] = set((toitsu_list[0].pai_tuple[0], ))
             for koutsu in koutsu_list:
                 p = koutsu.pai_list[0]
                 if p in suushiipai_list:
@@ -1730,7 +1730,7 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
             if EnabledKoyaku.uumensai:
                 result.append(token_koyaku_dict[tokens.uumensai])
             if is_menchin and len(koutsu_list) >= 4 and \
-               toitsu_list[0].pai_list[0].type == support.token_paitype_dict[tokens.zuu]:
+               toitsu_list[0].pai_tuple[0].type == support.token_paitype_dict[tokens.zuu]:
                 if EnabledKoyaku.gozokukyouwa:
                     result.append(token_koyaku_dict[tokens.gozokukyouwa])
 
@@ -1812,13 +1812,13 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
 
         # 大車輪、大數鄰、大竹林、大七星、純正黑一色
         if tehai_comb.tenpai_type == tokens.chiitoitsutanmenmachi:
-            p = toitsu_list[0].pai_list[0]
+            p = toitsu_list[0].pai_tuple[0]
             type_ = p.type
             if type_ != support.token_paitype_dict[tokens.zuu] and p.number not in (1, 9):
                 num_set: set[int] = set()
                 num_set.add(p.number)
                 for toitsu in toitsu_list[1:]:
-                    p = toitsu.pai_list[0]
+                    p = toitsu.pai_tuple[0]
                     if type_ != p.type or p.number not in (1, 9) or p.number in num_set:
                         break
                     else:
@@ -1835,7 +1835,7 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
                 num_set: set[int] = set()
                 num_set.add(p.number)
                 for toitsu in toitsu_list[1:]:
-                    p = toitsu.pai_list[0]
+                    p = toitsu.pai_tuple[0]
                     if p.number in num_set:
                         break
                     else:
@@ -1843,7 +1843,7 @@ def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
                 else:
                     result.append(token_koyaku_dict[tokens.daichisei])
 
-            if EnabledKoyaku.junseiheiiisoo and all(t.pai_list[0] in heiiisoopai_list for t in toitsu_list):
+            if EnabledKoyaku.junseiheiiisoo and all(t.pai_tuple[0] in heiiisoopai_list for t in toitsu_list):
                 result.append(token_koyaku_dict[tokens.junseiheiiisoo])
 
         # 三色同暗刻
