@@ -444,7 +444,7 @@ class PlayerRound:
             agari_results = get_agari_result_list(player.tehai, agari_pai, param)
             if not agari_results:
                 raise Exception(f"The player {player} is not agari!")
-            result = max(agari_results, key=lambda result: result.all_tensuu)
+            result = max(agari_results, key=lambda result: result.tensuu_info.get_yonin_total())
             sekininbarai = get_sekininbarai(player, result)
             ron_players_results.append((player, result, sekininbarai))
         return RoundResult(
@@ -683,7 +683,7 @@ class PlayerRound:
         agari_results = get_agari_result_list(player.tehai, pai, param)
         if not agari_results:
             raise Exception(f"The player {player} is not agari!")
-        result = max(agari_results, key=lambda result: result.all_tensuu)
+        result = max(agari_results, key=lambda result: result.tensuu_info.get_yonin_total())
         return RoundResult(
             RoundResultTokens.tsumo, 
             tsumo_player_result=(player, result, get_sekininbarai(player, result))
@@ -1162,9 +1162,9 @@ class PlayerRound:
                             result_list = get_agari_result_list(tehai, p, param)
                             if not result_list:
                                 continue
-                            result = max(result_list, key=lambda result: result.all_tensuu)
-                            if result.all_tensuu >= maximum:
-                                maximum = result.all_tensuu
+                            result = max(result_list, key=lambda result: result.tensuu_info.get_yonin_total())
+                            if result.tensuu_info.get_yonin_total() >= maximum:
+                                maximum = result.tensuu_info.get_yonin_total()
                                 max_idx = idx
                                 self.player.tehai = tehai
                         if max_idx is not None:

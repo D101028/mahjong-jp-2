@@ -1103,9 +1103,7 @@ class AgariResult:
                  han_list: list[Han], 
                  hansuu: int, 
                  fusuu: int | None, 
-                 basic_tensuu: int, 
-                 tensuu: tuple[int] | tuple[int, int], 
-                 all_tensuu: int
+                 tensuu_info: 'ResultTensuu'
                  ) -> None:
         self.is_yakuman: bool = is_yakuman
         self.tehai_comb: TehaiComb = tehai_comb
@@ -1113,16 +1111,14 @@ class AgariResult:
         self.han_list: list[Han] = han_list
         self.hansuu: int = hansuu
         self.fusuu: int | None = fusuu
-        self.basic_tensuu: int = basic_tensuu
-        self.tensuu: tuple[int] | tuple[int, int] = tensuu
-        self.all_tensuu: int = all_tensuu
+        self.tensuu_info = tensuu_info
 
     def __str__(self) -> str:
         return  f"""--------------------------------------------------------
 {self.tehai_comb.__str__()}
 {"\n".join(h.__str__() for h in self.han_list)}
 {f"{self.hansuu}飜 {self.fusuu if not self.fusuu is None else '*'}符"}
-{str(self.all_tensuu)}
+{str(self.tensuu_info.get_yonin_total())}
 --------------------------------------------------------"""
 
 def get_agari_result_list(tehai: Tehai, agari_pai: Pai, param: Param) -> list[AgariResult]:
@@ -1184,9 +1180,9 @@ def get_agari_result_list(tehai: Tehai, agari_pai: Pai, param: Param) -> list[Ag
         fusuu = get_fusuu(yl, tc, param, is_menchin)
 
         # 點數
-        basic_tensuu, tensuu, all_tensuu = get_tensuu(hansum, fusuu, is_yakuman, param)
+        tensuu_info = get_tensuu(hansum, fusuu, is_yakuman, param)
         
-        result.append(AgariResult(is_yakuman, tc, yl, han_list, hansum, fusuu, basic_tensuu, tensuu, all_tensuu))
+        result.append(AgariResult(is_yakuman, tc, yl, han_list, hansum, fusuu, tensuu_info))
     return result
 
 def get_fusuu(yaku_list: list[Yaku], tehai_comb: TehaiComb, param: Param, is_menchin: bool) -> int:
@@ -1271,41 +1267,68 @@ def round_up(n: int, ndigits: int) -> int:
     mod = 10**ndigits
     return (n//mod + (n % mod != 0)) * mod
 
-def get_tensuu(hansuu: int, fusuu: int, is_yakuman: bool, param: Param) -> tuple[int, tuple[int] | tuple[int, int], int]:
-    basic_tensuu: int
-    if BaseRules.aotenjyou_enabled or hansuu < 3 or (hansuu == 4 and fusuu <= 30) or (hansuu == 3 and fusuu <= 60):
-        basic_tensuu = fusuu * 2**(hansuu + 2)
-    elif is_yakuman:
-        basic_tensuu = 8000 * (hansuu//13)
-    elif hansuu >= 3 and hansuu <= 5: # mankan
-        basic_tensuu = 2000
-    elif hansuu >= 6 and hansuu <= 7: # haneman
-        basic_tensuu = 3000
-    elif hansuu >= 8 and hansuu <= 10: # baiman
-        basic_tensuu = 4000
-    elif hansuu >= 11 and hansuu <= 12: # sanbaiman
-        basic_tensuu = 6000
-    else: # kazoeyakuman
-        basic_tensuu = 8000
+class ResultTensuu:
+    def __init__(
+            self, 
+            agari_type: Literal['tsumo', 'ron'], 
+            is_oya: bool, 
+            base_tensuu: int) -> None:
+        self.agari_type: Literal['tsumo', 'ron'] = agari_type
+        self.is_oya: bool = is_oya
+        self.base_tensuu: int = base_tensuu
     
-    if param.menfon == support.fonwei_tuple[0]: # 莊
-        if param.agari_type == 'tsumo':
-            n = round_up(basic_tensuu*2, 2)
-            tensuu = (n, )
-            all_tensuu = n*3
+    @property
+    def oya_yonin_harai(self) -> int:
+        if self.is_oya:
+            raise AttributeError("oya_harai property is not defined for this case")
+        if self.agari_type == 'ron':
+            return self.get_yonin_total()
         else:
-            tensuu = (round_up(basic_tensuu*6, 2), )
-            all_tensuu = tensuu[0]
-    else: # 閒
-        if param.agari_type == 'tsumo':
-            n1 = round_up(basic_tensuu*2, 2)
-            n2 = round_up(basic_tensuu, 2)
-            tensuu = (n1, n2)
-            all_tensuu = n1 + n2*2
+            return round_up(self.base_tensuu*2, 2)
+    
+    @property
+    def ko_yonin_harai(self) -> int:
+        if self.agari_type == 'ron':
+            return self.get_yonin_total()
         else:
-            tensuu = (round_up(basic_tensuu*4, 2), )
-            all_tensuu = tensuu[0]
-    return basic_tensuu, tensuu, all_tensuu
+            return round_up(self.base_tensuu, 2)
+    
+    def get_yonin_total(self) -> int:
+        if self.agari_type == 'ron':
+            if self.is_oya:
+                return round_up(self.base_tensuu*6, 2)
+            else:
+                return round_up(self.base_tensuu*4, 2)
+        else:
+            if self.is_oya:
+                return round_up(self.base_tensuu*2, 2) * 3
+            else:
+                n1 = round_up(self.base_tensuu*2, 2)
+                n2 = round_up(self.base_tensuu, 2)
+                return n1 + n2*2
+
+def get_tensuu(hansuu: int, fusuu: int, is_yakuman: bool, param: Param) -> ResultTensuu:
+    base_tensuu: int
+    if BaseRules.aotenjyou_enabled or hansuu < 3 or (hansuu == 4 and fusuu <= 30) or (hansuu == 3 and fusuu <= 60):
+        base_tensuu = fusuu * 2**(hansuu + 2)
+    elif is_yakuman:
+        base_tensuu = 8000 * (hansuu//13)
+    elif hansuu >= 3 and hansuu <= 5: # mankan
+        base_tensuu = 2000
+    elif hansuu >= 6 and hansuu <= 7: # haneman
+        base_tensuu = 3000
+    elif hansuu >= 8 and hansuu <= 10: # baiman
+        base_tensuu = 4000
+    elif hansuu >= 11 and hansuu <= 12: # sanbaiman
+        base_tensuu = 6000
+    else: # kazoeyakuman
+        base_tensuu = 8000
+    
+    return ResultTensuu(
+        param.agari_type, 
+        param.menfon == support.fonwei_tuple[0], 
+        base_tensuu
+    )
 
 def get_yaku_list(tehai_comb: TehaiComb, param: Param) -> list[Yaku]:
     """獲取給定胡牌組合的全役種"""
