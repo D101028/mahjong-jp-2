@@ -8,7 +8,7 @@ from collections import OrderedDict
 from itertools import combinations_with_replacement
 from typing import Literal, Iterable
 
-from .yama import YamaType, YoninYama
+from .yama import YamaType
 from ..ext import tokens, support
 from ..ext.rule import BaseRules
 from ..ext.yaku import token_yaku_dict, token_koyaku_dict, Yaku
