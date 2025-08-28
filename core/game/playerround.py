@@ -82,6 +82,62 @@ class RoundResult:
         self.kyuushukyuhai_player = kyuushukyuhai_player
     
     def __str__(self) -> str:
+        if self.type == RoundResultTokens.tsumo:
+            assert self.tsumo_player_result is not None
+            return f"""======== RoundResult ========
+type: tsumo
+player: {self.tsumo_player_result[0]}
+result: 
+---------------------
+{self.tsumo_player_result[1]}
+---------------------
+sekininbarai: {list(map(lambda a, b: f"{a} {b}", *self.tsumo_player_result[2]))}
+============================="""
+        elif self.type == RoundResultTokens.ron:
+            assert self.ron_players_results is not None and self.ron_from_player is not None
+            return f"""======== RoundResult ========
+type: ron
+from player: {self.ron_from_player}
+results: 
+---------------------
+{'\n\n'.join(f"player: {player}\nresult: {result}\nsekininbarai: {list(map(lambda a, b: f"{a} {b}", *sekinin))}" for player, result, sekinin in self.ron_players_results)}
+---------------------
+============================="""
+        elif self.type == RoundResultTokens.normal_ryuukyoku:
+            assert self.tenpai_players is not None
+            return f"""======== RoundResult ========
+type: normal ryuukyoku
+tenpai players: 
+  {'\n  '.join(map(str, self.tenpai_players))}
+============================="""
+        elif self.type == RoundResultTokens.suuhonrenta_ryuukyoku:
+            return f"""======== RoundResult ========
+type: suuhonrenta
+============================="""
+        elif self.type == RoundResultTokens.suukansanra_ryuukyoku:
+            return f"""======== RoundResult ========
+type: suukansanra
+============================="""
+        elif self.type == RoundResultTokens.kyuushukyuhai_ryuukyoku:
+            return f"""======== RoundResult ========
+type: kyuushukyuhai
+player: {self.kyuushukyuhai_player}
+============================="""
+        elif self.type == RoundResultTokens.suuchariichi_ryuukyoku:
+            return f"""======== RoundResult ========
+type: sanchariichi
+============================="""
+        elif self.type == RoundResultTokens.sanchahoo_ryuukyoku:
+            return f"""======== RoundResult ========
+type: sanchahoo
+============================="""
+        elif self.type == RoundResultTokens.nagashimankan:
+            assert self.nagashimankan_players is not None
+            return f"""======== RoundResult ========
+type: nagashimankan
+players: 
+  {'\n  '.join(map(str, self.nagashimankan_players))}
+============================="""
         return f'<RoundResult type={self.type}>'
 
 def is_included(iter1: Iterable[SupportsEqual], iter2: Iterable[SupportsEqual]) -> bool:
