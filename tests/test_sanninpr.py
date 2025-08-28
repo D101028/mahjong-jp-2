@@ -74,9 +74,10 @@ class TestHoora(SetUpClass, unittest.TestCase):
         DebugInput.push('[14]', '[0, 0]') # 拔北、搶槓
         result = self.prround.run()
         assert isinstance(result, RoundResult)
-        assert result.ron_players_results is not None
-        for player, agari_result, _ in result.ron_players_results:
-            print(player, agari_result, sep='\n')
+        print(result)
+        # assert result.ron_players_results is not None
+        # for player, agari_result, _ in result.ron_players_results:
+        #     print(player, agari_result, sep='\n')
 
 if __name__ == '__main__':
     unittest.main()

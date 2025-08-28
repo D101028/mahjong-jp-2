@@ -91,7 +91,7 @@ result:
 ---------------------
 {self.tsumo_player_result[1]}
 ---------------------
-sekininbarai: {list(map(lambda a, b: f"{a} {b}", *self.tsumo_player_result[2]))}
+sekininbarai: {list(map(lambda x: f"{x[0]} {x[1]}", self.tsumo_player_result[2]))}
 ============================="""
         elif self.type == RoundResultTokens.ron:
             assert self.ron_players_results is not None and self.ron_from_player is not None
@@ -99,9 +99,9 @@ sekininbarai: {list(map(lambda a, b: f"{a} {b}", *self.tsumo_player_result[2]))}
 type: ron
 from player: {self.ron_from_player}
 results: 
----------------------
-{'\n\n'.join(f"player: {player}\nresult: {result}\nsekininbarai: {list(map(lambda a, b: f"{a} {b}", *sekinin))}" for player, result, sekinin in self.ron_players_results)}
----------------------
+_._._._._._._._._._._._._._._._._._._._._._._._
+{'\n\n'.join(f"player: {player}\nresult: {result}\nsekininbarai: {list(map(lambda x: f"{x[0]} {x[1]}", sekinin))}" for player, result, sekinin in self.ron_players_results)}
+_._._._._._._._._._._._._._._._._._._._._._._._
 ============================="""
         elif self.type == RoundResultTokens.normal_ryuukyoku:
             assert self.tenpai_players is not None
